@@ -1,0 +1,45 @@
+
+/* Lifewithmystic — Burgundy Substrata-inspired theme */
+:root{
+  --bg:#210a0a; --bg-soft:#2a0d0d; --ink:#f7eee8; --muted:#e9d6cd;
+  --accent:#d9a066; --accent-soft:#c08b55; --card:#311212;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family: 'Cormorant Garamond', Georgia, serif}
+a{color:var(--muted);text-decoration:none} a:hover{color:#fff}
+header.site-header{padding:42px 20px 28px;text-align:center;position:sticky;top:0;background:linear-gradient(180deg, rgba(33,10,10,.95), rgba(33,10,10,.75) 60%, rgba(33,10,10,0));backdrop-filter: blur(6px);z-index:10;border-bottom:1px solid rgba(217,160,102,.12);}
+.brand{letter-spacing:.15em;text-transform:lowercase;font-size:42px;margin:0;color:#fff}
+.subtitle{margin:6px 0 12px;color:var(--muted);font-weight:300;letter-spacing:.08em;font-size:16px}
+.nav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.nav a{padding:8px 12px;border:1px solid rgba(217,160,102,.25);border-radius:999px;transition:.25s}
+.nav a:hover{background:var(--accent-soft);color:#1b0a07;border-color:transparent}
+main{max-width:1100px;margin:0 auto;padding:20px}
+.section-title{font-size:18px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin:34px 8px 16px}
+.quote-wrap{background: radial-gradient(1200px 400px at 50% -10%, rgba(217,160,102,.12), transparent),linear-gradient(180deg, var(--bg-soft), transparent 70%);border:1px solid rgba(217,160,102,.15);box-shadow: var(--shadow);border-radius:18px;padding:28px;margin:10px 0 26px;text-align:center}
+.quote{font-size:26px;line-height:1.5;margin:0;opacity:1;transition:opacity .5s ease}
+.quote.fade{opacity:0}
+.quote-author{color:var(--muted);margin-top:10px;font-size:16px}
+.quote-actions{margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent-soft);color:#1b0a07;border:none;border-radius:999px;padding:10px 16px;cursor:pointer;font-weight:600;box-shadow: var(--shadow);transition:.25s}
+.btn:hover{transform:translateY(-1px);background:var(--accent)}
+.grid{display:grid;grid-template-columns: repeat(12,1fr);gap:16px}
+.tile{grid-column: span 12;background: linear-gradient(160deg, #3a1515, #261010);border:1px solid rgba(217,160,102,.15);border-radius:18px; overflow:hidden; position:relative;box-shadow: var(--shadow);transition: transform .2s ease, box-shadow .2s ease}
+.tile:hover{ transform: translateY(-3px) }
+.tile-inner{ display:flex; gap:16px; padding:18px; align-items: center }
+.tile-img{width:84px;height:84px;border-radius:10px;flex:0 0 auto;background:#000;background-size: cover; background-position:center; border:3px solid #fff}
+.tile .meta{flex:1 1 auto}
+.tile .meta h3{margin:0 0 6px;font-size:20px;color:#fff}
+.tile .meta .date{font-size:13px;color:var(--muted);letter-spacing:.05em}
+.tile .meta .excerpt{margin-top:6px;color:#f1e7df;opacity:.95}
+.cards{display:grid; gap:16px; grid-template-columns: repeat(12,1fr)}
+.card{grid-column: span 12;background: var(--card);border:1px solid rgba(217,160,102,.15);border-radius:18px; overflow:hidden; position:relative;box-shadow: var(--shadow);transition: transform .2s ease}
+.card:hover{ transform: translateY(-3px) }
+.card-img{ height:160px; background:#000; background-size:cover; background-position:center }
+.card-body{ padding:16px }
+.card-title{ margin:0; font-size:20px; color:#fff }
+.card-date{ font-size:12px; color:var(--muted); margin-top:6px; letter-spacing:.05em }
+.card-excerpt{ margin-top:8px; color:#f3eae3 }
+.footer{ text-align:center; padding:40px 20px; color:var(--muted) }
+@media(min-width:640px){ .tile{ grid-column: span 6 } .card{ grid-column: span 6 } }
+@media(min-width:980px){ .tile{ grid-column: span 4 } .card{ grid-column: span 4 } }
