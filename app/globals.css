@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -19,8 +23,182 @@
   }
 }
 
+/* Glassmorphism utilities */
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10;
+  }
+  
+  .glass-light {
+    @apply backdrop-blur-lg bg-white/20 dark:bg-white/10 border border-white/30 dark:border-white/15;
+  }
+  
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-white/30 dark:bg-white/20 border border-white/40 dark:border-white/30;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Theme variables for the ThemeEngine */
+[data-theme="academia"] {
+  --bg: #1A1A1A; /* Midnight */
+  --text: #D4C3A1; /* Antique Gold */
+  --accent: #8B0000; /* Oxblood */
+  --muted: rgba(212,195,161,0.12);
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-theme="zen"] {
+  --bg: #FCFAF7; /* Rice Paper */
+  --text: #2D2D2D; /* Charcoal */
+  --accent: #556B2F; /* Moss */
+  --muted: rgba(45,45,45,0.06);
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Utility: breathing animation for title */
+.breathing {
+  animation: breath 3s ease-in-out infinite;
+}
+
+@keyframes breath {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* Glow animation for accents */
+@keyframes glow {
+  0%, 100% { 
+    text-shadow: 0 0 5px rgba(212, 175, 152, 0.3);
+  }
+  50% { 
+    text-shadow: 0 0 20px rgba(212, 175, 152, 0.8);
+  }
+}
+
+.glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 1000px 100%;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse animation */
+@keyframes pulse-custom {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse-custom {
+  animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gradient shift */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Reduced motion support - disable animations for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .breathing,
+  .glow,
+  .shimmer,
+  .float,
+  .pulse-custom,
+  .gradient-shift {
+    animation: none !important;
+  }
+  
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessible focus states */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Skip to main content link for keyboard navigation */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 100;
+  font-weight: bold;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+/* Reduced-motion safe scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
