@@ -12,7 +12,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="absolute top-6 right-6 p-2 rounded bg-opacity-10"
+      className="hidden" // Hiding this as it is redundant with the ThemeSelector in Nav.tsx
       aria-label="Toggle theme"
     >
       Toggle

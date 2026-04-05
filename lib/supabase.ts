@@ -1,15 +1,22 @@
-export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+import { createClient } from '@supabase/supabase-js';
 
-if (!SUPABASE_URL) {
-  console.warn('NEXT_PUBLIC_SUPABASE_URL is not set');
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase credentials missing. Check your .env.local file.');
 }
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Keep existing helper if needed, but the client above is usually preferred
+export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export function supabaseFetch(path: string, method = 'GET', body?: any) {
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for server-side operations');
   }
-  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const url = `${supabaseUrl}/rest/v1/${path}`;
   return fetch(url, {
     method,
     headers: {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { updateFallbackPost } from '@/lib/sanity';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,8 +10,32 @@ export async function POST(request: NextRequest) {
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
     const token = process.env.SANITY_API_TOKEN;
 
+    // If Sanity isn't configured, update the in-memory fallback store
     if (!projectId || !token) {
-      return NextResponse.json({ message: 'Sanity not configured' }, { status: 500 });
+      if (!postId) {
+        return NextResponse.json({ message: 'Post ID required when saving locally' }, { status: 400 });
+      }
+
+      const updated = updateFallbackPost(postId, {
+        title,
+        slug: { current: slug },
+        excerpt,
+        body,
+        publishedAt,
+      });
+
+      if (!updated) {
+        return NextResponse.json({ message: 'Post not found' }, { status: 404 });
+      }
+
+      return NextResponse.json(
+        {
+          message: 'Post updated locally (Sanity not configured)',
+          slug,
+          id: postId,
+        },
+        { status: 200 }
+      );
     }
 
     const url = `https://${projectId}.api.sanity.io/v2021-06-07/data/mutate/${dataset}`;

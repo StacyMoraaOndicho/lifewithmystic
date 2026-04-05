@@ -142,7 +142,7 @@ function AdminContent() {
                 <h3 className="font-semibold text-white group-hover:text-blue-300 transition-colors">
                   Edit Posts
                 </h3>
-                <p className="text-xs text-white/60 mt-1">Manage content</p>
+                <p className="text-xs text-white/60 mt-1) mt-1">Manage content</p>
               </motion.div>
             </Link>
           </motion.div>
@@ -163,18 +163,18 @@ function AdminContent() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <a href="https://sanity.io/manage" target="_blank" rel="noopener noreferrer">
+            <Link href="/studio">
               <motion.div
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="glass-light p-6 rounded-xl cursor-pointer group text-center"
+                className="glass-light p-6 rounded-xl cursor-pointer group text-center border border-purple-500/30 shadow-[0_0_15px_-3px_rgba(168,85,247,0.2)]"
               >
-                <h2 className="text-3xl mb-2">🎛️</h2>
+                <h2 className="text-3xl mb-2">✨</h2>
                 <h3 className="font-semibold text-white group-hover:text-purple-300 transition-colors">
-                  Sanity CMS
+                  Visual Editor
                 </h3>
-                <p className="text-xs text-white/60 mt-1">Advanced features</p>
+                <p className="text-xs text-white/60 mt-1">Sanity Studio</p>
               </motion.div>
-            </a>
+            </Link>
           </motion.div>
         </motion.div>
 
@@ -291,10 +291,10 @@ function AdminContent() {
               <strong className="text-white">✍️ Create Posts Quickly:</strong> Use the form on the Create page to add new essays instantly
             </li>
             <li>
-              <strong className="text-white">🎛️ Advanced Management:</strong> Visit Sanity Studio for full CMS features (media, rich content, etc.)
+              <strong className="text-white">✨ Visual Editor:</strong> Click "Visual Editor" above for a professional writing interface (Sanity Studio)
             </li>
             <li>
-              <strong className="text-white">⚙️ Environment Setup:</strong> Make sure <code className="bg-white/10 px-2 py-1 text-xs rounded">SANITY_API_TOKEN</code> is set in your .env.local
+              <strong className="text-white">⚙️ Environment Setup:</strong> Make sure <code className="bg-white/10 px-2 py-1 text-xs rounded">NEXT_PUBLIC_SANITY_PROJECT_ID</code> is set in your .env.local
             </li>
             <li>
               <strong className="text-white">📅 Dates Matter:</strong> Posts appear in listings based on their published date

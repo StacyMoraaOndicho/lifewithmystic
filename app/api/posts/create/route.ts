@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { addFallbackPost } from '@/lib/sanity';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,10 +19,26 @@ export async function POST(request: NextRequest) {
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
     const token = process.env.SANITY_API_TOKEN;
 
+    // If Sanity isn't configured, fall back to the in-memory store.
     if (!projectId || !token) {
+      const localId = `local-${Date.now()}`;
+
+      addFallbackPost({
+        _id: localId,
+        title,
+        slug: { current: slug },
+        excerpt,
+        body,
+        publishedAt,
+      });
+
       return NextResponse.json(
-        { message: 'Sanity not configured. Set NEXT_PUBLIC_SANITY_PROJECT_ID and SANITY_API_TOKEN in .env.local' },
-        { status: 500 }
+        {
+          message: 'Post created locally (Sanity not configured)',
+          slug,
+          id: localId,
+        },
+        { status: 201 }
       );
     }
 

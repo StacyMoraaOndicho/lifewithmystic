@@ -1,32 +1,86 @@
-// Simple helper to query Sanity's read API without adding the Sanity client dependency.
-export const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
-export const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
+import { createClient } from 'next-sanity';
+import createImageUrlBuilder from '@sanity/image-url';
 
-async function sanityFetch<G = any>(query: string, params?: Record<string, any>): Promise<G> {
-  if (!projectId) {
-    // Return sample data when Sanity is not configured
-    if (query.includes('_type == "post"')) {
-      return [
-        { _id: '1', title: 'Silence as Mirror', slug: { current: 'silence-as-mirror' }, publishedAt: '2025-01-20', excerpt: 'Exploring the depths of silence in spiritual practice.' },
-        { _id: '2', title: 'The Divine Within', slug: { current: 'divine-within' }, publishedAt: '2025-01-18', excerpt: 'Reflections on finding the sacred in everyday moments.' },
-      ] as any;
+export const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'oapgv793';
+export const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
+export const apiVersion = '2023-05-03';
+
+export const client = createClient({
+  projectId,
+  dataset,
+  apiVersion,
+  useCdn: false,
+});
+
+// Helper to generate image URLs using the updated builder method
+const builder = createImageUrlBuilder({
+  projectId: projectId || '',
+  dataset: dataset || 'production',
+});
+
+export function urlFor(source: any) {
+  return builder.image(source);
+}
+
+export type PortableBlock = any;
+
+export type SanityPost = {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  publishedAt?: string;
+  excerpt?: string;
+  body?: PortableBlock[];
+};
+
+declare global {
+  var __LWM_FALLBACK_POSTS__: SanityPost[] | undefined;
+}
+
+const getFallbackPosts = (): SanityPost[] => {
+  if (typeof window === 'undefined') {
+    if (!global.__LWM_FALLBACK_POSTS__) {
+      global.__LWM_FALLBACK_POSTS__ = [
+        {
+          _id: '1',
+          title: 'Silence as Mirror (Fallback)',
+          slug: { current: 'silence-as-mirror' },
+          publishedAt: '2025-01-20',
+          excerpt: 'Exploring the depths of silence in spiritual practice.',
+          body: [{ _type: 'block', children: [{ _type: 'span', text: 'Fallback content...' }] }],
+        },
+      ];
     }
-    throw new Error("NEXT_PUBLIC_SANITY_PROJECT_ID is not set");
+    return global.__LWM_FALLBACK_POSTS__;
+  }
+  return [];
+};
+
+export function addFallbackPost(post: SanityPost) {
+  const posts = getFallbackPosts();
+  posts.unshift(post);
+  return posts;
+}
+
+export async function sanityFetch<G = any>(query: string, params: Record<string, any> = {}): Promise<G> {
+  if (projectId && projectId !== 'none') {
+    try {
+      return await client.fetch(query, params);
+    } catch (error) {
+      console.warn("Sanity fetch failed, falling back to local data:", error);
+    }
   }
 
-  const base = `https://${projectId}.api.sanity.io/v2024-01-01/data/query/${dataset}`;
-  const url = params
-    ? `${base}?query=${encodeURIComponent(query)}&${new URLSearchParams({ params: JSON.stringify(params) })}`
-    : `${base}?query=${encodeURIComponent(query)}`;
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Sanity fetch failed: ${res.status} ${txt}`);
+  if (query.includes('_type == "post"')) {
+    const posts = getFallbackPosts();
+    if (query.includes('slug.current == $slug') && params?.slug) {
+      const post = posts.find((p) => p.slug.current === params.slug);
+      return (post ? [post] : []) as any;
+    }
+    return posts as any;
   }
 
-  const json = await res.json();
-  return json.result as G;
+  return [] as any;
 }
 
 export default sanityFetch;

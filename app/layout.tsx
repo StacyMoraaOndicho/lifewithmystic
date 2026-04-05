@@ -38,10 +38,10 @@ export default function RootLayout({
           <Analytics />
           <ReadingProgressBar />
           <ImmersiveModeProvider>
-            <header>
-              <Nav />
-            </header>
             <ClientThemeProvider>
+              <header>
+                <Nav />
+              </header>
               {/* sensory layer + motion container are client components */}
               <div>
                 {/* Particles background */}
