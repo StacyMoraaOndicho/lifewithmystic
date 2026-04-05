@@ -65,6 +65,16 @@ export function addFallbackPost(post: SanityPost) {
 // Aliasing for compatibility with different API routes
 export const updateFallbackPost = addFallbackPost;
 
+// Added missing delete function for Vercel build compatibility
+export function deleteFallbackPost(id: string) {
+  const posts = getFallbackPosts();
+  const index = posts.findIndex(p => p._id === id);
+  if (index !== -1) {
+    posts.splice(index, 1);
+  }
+  return posts;
+}
+
 export async function sanityFetch<G = any>(query: string, params: Record<string, any> = {}): Promise<G> {
   if (projectId && projectId !== 'none') {
     try {
