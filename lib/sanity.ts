@@ -62,6 +62,9 @@ export function addFallbackPost(post: SanityPost) {
   return posts;
 }
 
+// Aliasing for compatibility with different API routes
+export const updateFallbackPost = addFallbackPost;
+
 export async function sanityFetch<G = any>(query: string, params: Record<string, any> = {}): Promise<G> {
   if (projectId && projectId !== 'none') {
     try {
