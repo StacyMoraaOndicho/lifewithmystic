@@ -12,7 +12,6 @@ export const client = createClient({
   useCdn: false,
 });
 
-// Helper to generate image URLs using the updated builder method
 const builder = createImageUrlBuilder({
   projectId: projectId || '',
   dataset: dataset || 'production',
@@ -62,10 +61,17 @@ export function addFallbackPost(post: SanityPost) {
   return posts;
 }
 
-// Aliasing for compatibility with different API routes
-export const updateFallbackPost = addFallbackPost;
+// Fixed to accept two arguments to match the API route usage
+export function updateFallbackPost(id: string, data: Partial<SanityPost>) {
+  const posts = getFallbackPosts();
+  const index = posts.findIndex(p => p._id === id);
+  if (index !== -1) {
+    posts[index] = { ...posts[index], ...data };
+    return posts[index];
+  }
+  return null;
+}
 
-// Added missing delete function for Vercel build compatibility
 export function deleteFallbackPost(id: string) {
   const posts = getFallbackPosts();
   const index = posts.findIndex(p => p._id === id);
