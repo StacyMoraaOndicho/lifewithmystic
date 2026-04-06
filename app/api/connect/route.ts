@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-01-27.acacia',
+  apiVersion: '2026-03-25.dahlia' as any,
 });
 
 export async function POST(req: Request) {
@@ -30,7 +30,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: accountLink.url });
   } catch (err: any) {
     console.error('Stripe Connect error:', err.message);
-    // Return the specific error message to the frontend alert
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

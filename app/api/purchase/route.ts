@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-01-27.acacia',
+  apiVersion: '2026-03-25.dahlia' as any,
 });
 
 export async function POST(req: Request) {
@@ -20,7 +20,6 @@ export async function POST(req: Request) {
     const platformFee = Math.round(amount * 0.05);
 
     // Create a Stripe checkout session with "Destination Charges"
-    // This sends the money to the WRITER and takes your 5% fee automatically
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -40,7 +39,7 @@ export async function POST(req: Request) {
       payment_intent_data: {
         application_fee_amount: platformFee,
         transfer_data: {
-          destination: writerStripeId, // The writer's acct_ID
+          destination: writerStripeId, 
         },
       },
       success_url: productLink, 
