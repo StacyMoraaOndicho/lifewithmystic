@@ -28,8 +28,7 @@ export default function Nav() {
     { href: '/audio', label: 'Audio' },
   ];
 
-  // Prevent white flash by returning a transparent or dark placeholder until mounted
-  const navBg = mounted ? 'var(--bg)' : '#0a0a0a'; 
+  if (!mounted) return null;
 
   return (
     <>
@@ -38,7 +37,7 @@ export default function Nav() {
         animate={{ y: isImmersive ? -100 : 0 }}
         transition={{ duration: 0.3 }}
         style={{ 
-          backgroundColor: navBg, 
+          backgroundColor: 'var(--bg, transparent)', 
           borderBottomColor: 'rgba(var(--text-rgb, 128, 128, 128), 0.1)',
           color: 'var(--text)'
         }}
@@ -79,46 +78,49 @@ export default function Nav() {
           </div>
 
           <div className="flex items-center gap-4 md:gap-6 shrink-0 ml-12">
+            {/* Restored Admin Button */}
             <Link href="/admin" className="hidden lg:block px-2 py-1 text-[9px] border border-current opacity-20 hover:opacity-100 rounded transition-all uppercase tracking-widest">
               Admin
             </Link>
 
-            <div className="flex items-center gap-4">
-              {mounted && user ? (
-                <div className="flex items-center gap-3">
-                  <Link href="/writer/dashboard" className="px-3 py-1.5 text-[9px] bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent)]/20 transition-all uppercase tracking-widest font-bold">
-                    Dashboard
-                  </Link>
-                  <button 
-                    onClick={() => signOut()}
-                    className="px-3 py-1.5 text-[9px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : mounted ? (
-                <div className="flex items-center gap-4">
-                  <Link href="/login" className="text-xs opacity-60 hover:opacity-100 transition-all uppercase tracking-widest">
-                    Login
-                  </Link>
-                  
-                  <div className="flex flex-col items-center">
-                    <Link href="/signup" className="px-6 py-1.5 text-xs bg-[var(--accent)] text-[var(--bg)] rounded-full hover:opacity-90 transition-all uppercase tracking-widest font-semibold z-10">
-                      Join
+            {mounted && (
+              <div className="flex items-center gap-4">
+                {user ? (
+                  <div className="flex items-center gap-3">
+                    <Link href="/writer/dashboard" className="px-3 py-1.5 text-[9px] bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent)]/20 transition-all uppercase tracking-widest font-bold">
+                      Dashboard
                     </Link>
-                    <motion.div
-                      animate={{ opacity: [0.4, 1, 0.4], textShadow: ["0 0 0px #fff", "0 0 10px #fff", "0 0 0px #fff"] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                      className="mt-1"
+                    <button 
+                      onClick={() => signOut()}
+                      className="px-3 py-1.5 text-[9px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
                     >
-                      <Link href="/pricing" className="text-[10px] italic text-white/80 hover:text-white transition-all whitespace-nowrap tracking-tight leading-none" style={{ fontFamily: 'Georgia, serif' }}>
-                        Become a Writer
-                      </Link>
-                    </motion.div>
+                      Logout
+                    </button>
                   </div>
-                </div>
-              ) : null}
-            </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Link href="/login" className="text-xs opacity-60 hover:opacity-100 transition-all uppercase tracking-widest">
+                      Login
+                    </Link>
+                    
+                    <div className="flex flex-col items-center">
+                      <Link href="/signup" className="px-6 py-1.5 text-xs bg-[var(--accent)] text-[var(--bg)] rounded-full hover:opacity-90 transition-all uppercase tracking-widest font-semibold z-10">
+                        Join
+                      </Link>
+                      <motion.div
+                        animate={{ opacity: [0.4, 1, 0.4], textShadow: ["0 0 0px #fff", "0 0 10px #fff", "0 0 0px #fff"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                        className="mt-1"
+                      >
+                        <Link href="/pricing" className="text-[10px] italic text-white/80 hover:text-white transition-all whitespace-nowrap tracking-tight leading-none" style={{ fontFamily: 'Georgia, serif' }}>
+                          Become a Writer
+                        </Link>
+                      </motion.div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             
             <div className="h-4 w-[1px] bg-current opacity-10 hidden sm:block" />
             <ThemeSelector />
