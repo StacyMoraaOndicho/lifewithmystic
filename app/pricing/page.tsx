@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Check, Star, Zap, PenTool, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, Star, Zap, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 
@@ -32,7 +32,7 @@ const plans = [
       'Promote Ebooks & Digital Products',
       'Analytics Dashboard',
       'Custom Newsletter for your followers',
-      '5% Platform Fee on sales'
+      'Local & Global Payment Options'
     ],
     buttonText: 'Start Writing',
     action: 'subscribe',
@@ -41,10 +41,42 @@ const plans = [
   }
 ];
 
+const paymentMethods = [
+  {
+    id: 'mpesa',
+    name: 'M-Pesa',
+    description: 'Direct mobile money transfer (Kenya)',
+    icon: <Smartphone className="w-5 h-5 text-emerald-500" />,
+    tag: 'Popular in Kenya'
+  },
+  {
+    id: 'flutterwave',
+    name: 'Flutterwave',
+    description: 'Cards, Mobile Money & Virtual Cards',
+    icon: <Globe className="w-5 h-5 text-blue-400" />,
+    tag: 'Africa & Global'
+  },
+  {
+    id: 'paystack',
+    name: 'Paystack',
+    description: 'Secure card & bank payments',
+    icon: <CreditCard className="w-5 h-5 text-yellow-500" />,
+    tag: 'Fast & Secure'
+  },
+  {
+    id: 'stripe',
+    name: 'Stripe (International)',
+    description: 'Global credit & debit cards',
+    icon: <Globe className="w-5 h-5 text-purple-400" />,
+    tag: 'International'
+  }
+];
+
 export default function PricingPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
 
   const handleAction = async (plan: any) => {
     if (plan.action === 'signup') {
@@ -57,29 +89,34 @@ export default function PricingPage() {
       return;
     }
 
-    setLoading(plan.name);
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          userEmail: user.email,
-        }),
-      });
+    // Instead of immediate redirect, show options
+    setShowPaymentOptions(true);
+  };
 
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert('Failed to start checkout. Please try again.');
+  const handlePaymentMethod = async (methodId: string) => {
+    setLoading(methodId);
+    // Placeholder for actual gateway integration
+    // For now, it just simulates the "intent"
+    console.log(`Selected payment method: ${methodId}`);
+    
+    // If Stripe is picked, we use existing logic
+    if (methodId === 'stripe') {
+      try {
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user?.id, userEmail: user?.email }),
+        });
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+      } catch (err) {
+        alert('Stripe gateway currently unavailable.');
       }
-    } catch (err) {
-      console.error(err);
-      alert('An error occurred.');
-    } finally {
-      setLoading(null);
+    } else {
+      // Logic for M-Pesa, Flutterwave, etc will go here
+      alert(`${methodId} integration is being initialized for your region.`);
     }
+    setLoading(null);
   };
 
   return (
@@ -99,7 +136,7 @@ export default function PricingPage() {
             transition={{ delay: 0.1 }}
             className="text-[var(--text)]/50 text-xl font-light max-w-2xl mx-auto leading-relaxed italic"
           >
-            Choose your path. Whether you are here to absorb the light or to radiate your own wisdom, there is a place for you.
+            Choose your path. Accessible globally, powered locally.
           </motion.p>
         </div>
 
@@ -116,22 +153,6 @@ export default function PricingPage() {
                   : 'border-[var(--text)]/10 bg-[var(--text)]/[0.02]'
               } flex flex-col`}
             >
-              {plan.highlight && (
-                <motion.div 
-                  animate={{ 
-                    boxShadow: [
-                      "0 0 10px rgba(255, 255, 255, 0.3)",
-                      "0 0 30px rgba(255, 255, 255, 0.8)",
-                      "0 0 10px rgba(255, 255, 255, 0.3)"
-                    ]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-8 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full z-10"
-                >
-                  Most Chosen
-                </motion.div>
-              )}
-
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className={`p-3 rounded-2xl ${plan.highlight ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'bg-[var(--text)]/10 text-[var(--text)]/40'}`}>
@@ -141,7 +162,7 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-baseline gap-1 mb-4">
                   <span className="text-6xl font-light text-[var(--text)]">{plan.price}</span>
-                  <span className="text-[var(--text)]/40 text-sm uppercase tracking-[0.3em] ml-2">{plan.period}</span>
+                  {plan.period && <span className="text-[var(--text)]/40 text-sm uppercase tracking-[0.3em] ml-2">{plan.period}</span>}
                 </div>
                 <p className="text-[var(--text)]/60 text-sm leading-relaxed italic">{plan.description}</p>
               </div>
@@ -157,39 +178,76 @@ export default function PricingPage() {
 
               <button 
                 onClick={() => handleAction(plan)}
-                disabled={loading === plan.name}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   plan.highlight
                     ? 'bg-[var(--accent)] text-[var(--bg)] hover:shadow-2xl hover:scale-[1.02]'
                     : 'bg-[var(--text)]/5 text-[var(--text)] border border-[var(--text)]/10 hover:bg-[var(--text)]/10'
-                } disabled:opacity-50`}
+                }`}
               >
-                {loading === plan.name ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  plan.buttonText
-                )}
+                {plan.buttonText}
               </button>
             </motion.div>
           ))}
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-24 p-12 rounded-[40px] border border-[var(--text)]/5 bg-[var(--text)]/[0.01] text-center"
-        >
-          <div className="flex justify-center gap-10 mb-8 flex-wrap opacity-30 grayscale hover:grayscale-0 transition-all duration-1000">
-            <Zap className="w-8 h-8" />
-            <Star className="w-8 h-8" />
-            <PenTool className="w-8 h-8" />
-          </div>
-          <h4 className="text-[var(--text)]/40 uppercase tracking-[0.6em] text-[10px] mb-6 font-mono font-bold">The Collective Advantage</h4>
-          <p className="text-[var(--text)]/60 max-w-2xl mx-auto text-sm leading-relaxed italic font-light">
-            All voices in the sanctuary benefit from automated spiritual SEO, ethereal social sharing tools, and direct transmission to our expanding circle of over 10,000+ monthly seekers.
-          </p>
-        </motion.div>
+        {/* Payment Selection Overlay */}
+        <AnimatePresence>
+          {showPaymentOptions && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="bg-[var(--bg)] border border-white/10 w-full max-w-lg rounded-[40px] p-10 relative shadow-3xl"
+              >
+                <button 
+                  onClick={() => setShowPaymentOptions(false)}
+                  className="absolute top-8 right-8 p-2 text-white/20 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-light text-white mb-2 uppercase tracking-widest">Select Gateway</h2>
+                  <p className="text-white/40 text-xs italic">Choose your preferred method to enter the sanctuary.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {paymentMethods.map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => handlePaymentMethod(method.id)}
+                      disabled={!!loading}
+                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-white/[0.05] transition-all flex items-center justify-between group text-left"
+                    >
+                      <div className="flex items-center gap-5">
+                        <div className="p-3 rounded-2xl bg-white/5 group-hover:scale-110 transition-transform">
+                          {method.icon}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-white font-medium">{method.name}</h4>
+                            <span className="text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/10 text-white/40 font-bold">{method.tag}</span>
+                          </div>
+                          <p className="text-[10px] text-white/30 font-light mt-1">{method.description}</p>
+                        </div>
+                      </div>
+                      {loading === method.id ? <Loader2 className="w-4 h-4 animate-spin text-white/20" /> : <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="mt-8 text-center text-[9px] text-white/20 uppercase tracking-[0.3em]">
+                  Secure encrypted transmission
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </main>
   );
