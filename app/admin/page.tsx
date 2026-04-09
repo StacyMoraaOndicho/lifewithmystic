@@ -47,7 +47,12 @@ function AdminContent() {
       <div className="max-w-4xl mx-auto">
         <header className="flex justify-between items-center mb-12">
           <h1 className="text-4xl font-light">Admin Dashboard</h1>
-          <button onClick={signOut} className="text-xs uppercase tracking-widest opacity-50 hover:opacity-100 transition-all">Sign Out</button>
+          <button 
+            onClick={signOut} 
+            className="text-xs uppercase tracking-widest text-red-500 opacity-80 hover:opacity-100 transition-all font-bold"
+          >
+            Sign Out
+          </button>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -69,10 +74,12 @@ function AdminContent() {
           <h2 className="text-xl mb-6 opacity-50 uppercase tracking-widest">Recent Posts</h2>
           <div className="space-y-4">
             {posts.map((post) => (
-              <div key={post._id} className="p-4 rounded-xl border border-white/5 flex justify-between items-center">
-                <span>{post.title}</span>
-                <span className="text-xs opacity-30">{formatDate(post.publishedAt || post._createdAt)}</span>
-              </div>
+              <Link key={post._id} href={`/blog/${post.slug.current}`} className="block">
+                <div className="p-4 rounded-xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all flex justify-between items-center">
+                  <span className="hover:text-amber-200 transition-colors">{post.title}</span>
+                  <span className="text-xs opacity-30">{formatDate(post.publishedAt || post._createdAt)}</span>
+                </div>
+              </Link>
             ))}
           </div>
         </section>

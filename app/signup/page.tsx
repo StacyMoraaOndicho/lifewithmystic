@@ -11,7 +11,6 @@ function SignupContent() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [error, setError] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
@@ -20,9 +19,7 @@ function SignupContent() {
     e.preventDefault();
     setLoading(true);
     setMessage('');
-    setError(false);
 
-    // Stricter Signup check
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -32,61 +29,49 @@ function SignupContent() {
     });
 
     if (error) {
-      setError(true);
-      if (error.message.includes('already registered')) {
-        setMessage('Identity already exists. Please log in instead.');
-      } else {
-        setMessage(`Sacred Error: ${error.message}`);
+      setMessage(`Error: ${error.message}`);
+    } else {
+      setMessage('Check your email for the confirmation link!');
+      if (data.user && data.session) {
+        router.push(plan === 'writer' ? '/pricing' : '/blog');
       }
-    } else if (data.user && data.session === null) {
-      // This means email confirmation is required and working
-      setMessage('A confirmation link has been sent to your inbox.');
-    } else if (data.user && data.session) {
-      // Auto-confirmed (Confirm Email is OFF in Supabase)
-      setMessage('Account created. Redirecting...');
-      router.push(plan === 'writer' ? '/pricing' : '/blog');
     }
-    
     setLoading(false);
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-[#0a0a0a] transition-colors duration-500">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-[var(--bg)] transition-colors duration-500">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md p-10 rounded-[40px] border border-white/10 bg-[#0a0a0a] shadow-2xl relative overflow-hidden"
+        className="w-full max-w-md p-8 rounded-3xl border border-[var(--text)]/10 bg-[var(--bg)] shadow-2xl"
       >
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-light tracking-tight text-white mb-2 uppercase tracking-[0.2em]">
-            Join the <span className="italic text-[var(--accent)] font-serif">Mystery</span>
-          </h1>
-          <p className="text-white/40 italic text-sm">
-            {plan === 'writer' ? 'Initiating your creator profile...' : 'Begin your journey into the sanctuary.'}
-          </p>
+          <h1 className="text-4xl font-light tracking-tight text-[var(--text)] mb-2">Join the Mystery</h1>
+          <p className="text-[var(--text)]/40 italic">Create an account to like and reflect on essays.</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-6">
-          <div className="space-y-2">
-            <label className="block text-[10px] uppercase tracking-[0.3em] text-white/40 font-mono font-bold">Identity (Email)</label>
+          <div>
+            <label className="block text-xs uppercase tracking-widest text-[var(--text)]/60 mb-2 font-mono">Email Address</label>
             <input 
               type="email" 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-5 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[var(--accent)]/50 transition-all font-light"
-              placeholder="name@email.com"
+              className="w-full p-4 rounded-xl bg-[var(--text)]/5 border border-[var(--text)]/10 text-[var(--text)] focus:outline-none focus:border-[var(--accent)]/50 transition-all"
+              placeholder="you@example.com"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-[10px] uppercase tracking-[0.3em] text-white/40 font-mono font-bold">Passphrase</label>
+          <div>
+            <label className="block text-xs uppercase tracking-widest text-[var(--text)]/60 mb-2 font-mono">Password</label>
             <input 
               type="password" 
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-5 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[var(--accent)]/50 transition-all font-light"
+              className="w-full p-4 rounded-xl bg-[var(--text)]/5 border border-[var(--text)]/10 text-[var(--text)] focus:outline-none focus:border-[var(--accent)]/50 transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -94,25 +79,25 @@ function SignupContent() {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full p-5 rounded-2xl bg-[var(--accent)] text-white hover:shadow-2xl hover:scale-[1.01] transition-all font-bold uppercase tracking-[0.3em] text-[10px] disabled:opacity-50"
+            className="w-full p-4 rounded-xl border border-[var(--text)]/20 hover:bg-[var(--text)]/5 transition-all font-semibold uppercase tracking-[0.2em] text-sm disabled:opacity-50"
           >
-            {loading ? 'Transmitting...' : 'Sign Up'}
+            {loading ? 'Initiating...' : 'Sign Up'}
           </button>
         </form>
 
         {message && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`mt-8 p-5 rounded-2xl text-center border ${error ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'}`}
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 text-center text-sm text-[var(--text)]/60"
           >
-            <p className="text-[10px] font-bold uppercase tracking-widest">{message}</p>
-          </motion.div>
+            {message}
+          </motion.p>
         )}
 
-        <div className="mt-10 pt-8 border-t border-white/5 text-center flex flex-col gap-4">
-          <p className="text-sm text-white/40">
-            Already a member? <Link href="/login" className="text-[var(--accent)] hover:underline">Log in</Link>
+        <div className="mt-10 pt-6 border-t border-[var(--text)]/5 text-center">
+          <p className="text-sm text-[var(--text)]/40">
+            Already a member? <Link href="/login" className="text-[var(--text)] hover:underline">Login here</Link>
           </p>
         </div>
       </motion.div>
