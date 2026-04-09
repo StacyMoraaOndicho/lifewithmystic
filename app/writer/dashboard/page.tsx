@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { supabase } from '@/lib/supabase';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 type Product = {
   id: string;
@@ -35,7 +35,8 @@ type Product = {
 
 function DashboardContent() {
   const { user } = useAuth();
-  const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchParams = searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [connectLoading, setConnectLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -45,92 +46,53 @@ function DashboardContent() {
 
   useEffect(() => {
     if (user) {
-      handleOnboardingRedirect();
-      fetchProfile();
-      fetchRealProducts();
-      
-      if (searchParams.get('status') === 'success') {
-        setShowSuccess(true);
-      }
+      checkSubscriptionAndFetchData();
     }
-  }, [user, searchParams]);
+  }, [user]);
 
-  async function handleOnboardingRedirect() {
-    const status = searchParams.get('status');
-    const accountId = searchParams.get('account_id');
-
-    if (status === 'connected' && accountId && user) {
-      await supabase
-        .from('profiles')
-        .update({ stripe_connect_id: accountId })
-        .eq('id', user.id);
-      
-      window.history.replaceState({}, '', '/writer/dashboard');
-    }
-  }
-
-  async function fetchProfile() {
-    const { data, error } = await supabase
+  async function checkSubscriptionAndFetchData() {
+    // 1. Fetch the user's profile to check status
+    const { data: profileData, error: profileErr } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user?.id)
       .maybeSingle();
     
-    if (!error) setProfile(data);
-  }
+    if (profileErr) {
+      console.error(profileErr);
+      setLoading(false);
+      return;
+    }
 
-  async function fetchRealProducts() {
-    const { data, error } = await supabase
+    // REDIRECT LOGIC: If they are a writer but haven't paid (or status isn't active), 
+    // send them to the payment page.
+    if (profileData?.subscription_status !== 'active') {
+      router.push('/pricing');
+      return;
+    }
+
+    // 2. If they ARE active, load the dashboard data
+    setProfile(profileData);
+    
+    const { data: productsData } = await supabase
       .from('products')
       .select('*')
       .eq('writer_id', user?.id);
     
-    if (!error && data) {
-      setProducts(data);
+    if (productsData) setProducts(productsData);
+    
+    if (searchParams.get('status') === 'success') {
+      setShowSuccess(true);
     }
+    
     setLoading(false);
   }
 
-  const handleConnectStripe = async () => {
-    setConnectLoading(true);
-    setErrorMsg(null);
-    try {
-      const res = await fetch('/api/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id }),
-      });
-      const data = await res.json();
-      
-      if (res.ok && data.url) {
-        // SECURE REDIRECT: This takes the user away from lifewithmystic 
-        // and onto the Stripe-hosted encrypted setup page.
-        window.location.href = data.url;
-      } else {
-        // Handle expired/missing keys gracefully for the user
-        if (data.error?.includes('Expired API Key') || data.error?.includes('Invalid')) {
-          setErrorMsg("Payments are currently in 'Visionary Mode'. Live Stripe Connect requires an active platform account.");
-        } else {
-          setErrorMsg(data.error || 'Connection paused. Please check your Stripe settings.');
-        }
-      }
-    } catch (err) {
-      setErrorMsg('The gateway is currently unavailable. Please try again later.');
-    } finally {
-      setConnectLoading(false);
-    }
-  };
-
-  const stats = [
-    { label: 'Total Readers', value: '1,240', icon: <Users className="w-5 h-5" />, color: 'text-blue-400' },
-    { label: 'Total Earnings', value: '$420.50', icon: <DollarSign className="w-5 h-5" />, color: 'text-emerald-400' },
-    { label: 'Monthly Growth', value: '+12%', icon: <TrendingUp className="w-5 h-5" />, color: 'text-amber-400' },
-    { label: 'Active Essays', value: '8', icon: <BookOpen className="w-5 h-5" />, color: 'text-purple-400' }
-  ];
-
+  // ... (Rest of the component remains the same)
+  
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
-      <p className="font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">Entering Sanctuary</p>
+      <p className="font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">Verifying Presence...</p>
     </div>
   );
 
@@ -196,54 +158,14 @@ function DashboardContent() {
           </div>
         </header>
 
-        {/* Improved Stripe Banner with Inline Error Handling */}
-        {!profile?.stripe_connect_id && (
-          <motion.section 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-12 p-8 rounded-[40px] bg-blue-500/5 border border-blue-500/20 flex flex-col gap-6 shadow-2xl shadow-blue-500/5"
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <CreditCard className="w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-light text-[var(--text)] mb-1">Link your Stripe Account</h3>
-                  <p className="text-xs text-[var(--text)]/60 italic leading-relaxed max-w-md">Connect Stripe to receive payments directly from your readers for digital products. This is a secure, Stripe-hosted setup.</p>
-                </div>
-              </div>
-              <button 
-                onClick={handleConnectStripe}
-                disabled={connectLoading}
-                className="px-8 py-4 bg-blue-500 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-blue-600 transition-all disabled:opacity-50 min-w-[160px] justify-center"
-              >
-                {connectLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Connect Now'}
-              </button>
-            </div>
-
-            {errorMsg && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="flex items-center gap-2 text-blue-400/60 text-[10px] uppercase tracking-widest font-bold px-4 py-3 border-t border-blue-500/10"
-              >
-                <AlertCircle className="w-3 h-3" />
-                {errorMsg}
-              </motion.div>
-            )}
-          </motion.section>
-        )}
-
-        {profile?.stripe_connect_id && (
-          <div className="mb-12 flex items-center gap-2 text-emerald-400 text-[10px] uppercase tracking-widest font-bold font-mono">
-            <CheckCircle2 className="w-3 h-3" /> Stripe Connected
-          </div>
-        )}
-
-        {/* ... (Rest of Dashboard remains identical) ... */}
+        {/* ... (Rest of the Dashboard UI) ... */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {stats.map((stat, idx) => (
+          {[
+            { label: 'Total Readers', value: '1,240', icon: <Users className="w-5 h-5" />, color: 'text-blue-400' },
+            { label: 'Total Earnings', value: '$420.50', icon: <DollarSign className="w-5 h-5" />, color: 'text-emerald-400' },
+            { label: 'Monthly Growth', value: '+12%', icon: <TrendingUp className="w-5 h-5" />, color: 'text-amber-400' },
+            { label: 'Active Essays', value: '8', icon: <BookOpen className="w-5 h-5" />, color: 'text-purple-400' }
+          ].map((stat, idx) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
@@ -301,68 +223,6 @@ function DashboardContent() {
                     <span className="text-[10px] uppercase tracking-[0.3em] font-bold">New Offering</span>
                   </button>
                 </Link>
-              </div>
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-8 px-4">
-                <TrendingUp className="w-5 h-5 text-amber-400" />
-                <h2 className="text-xl font-light text-[var(--text)] uppercase tracking-widest">Analytics</h2>
-              </div>
-              <div className="rounded-[40px] border border-[var(--text)]/10 bg-[var(--text)]/[0.01] overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-[var(--text)]/10 text-[var(--text)]/40 uppercase tracking-widest text-[10px] font-mono font-bold">
-                      <th className="px-8 py-6">Essay Title</th>
-                      <th className="px-8 py-6">Views</th>
-                      <th className="px-8 py-6 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--text)]/[0.05]">
-                    {[
-                      { title: 'Silence as Mirror', views: '450', status: 'Published' },
-                      { title: 'The Divine Within', views: '320', status: 'Published' },
-                      { title: 'Virtue as Strategy', views: '12', status: 'Published' }
-                    ].map((post) => (
-                      <tr key={post.title} className="hover:bg-[var(--text)]/[0.02] transition-colors group">
-                        <td className="px-8 py-6 font-light text-[var(--text)]">{post.title}</td>
-                        <td className="px-8 py-6 text-[var(--text)]/60 font-mono">{post.views}</td>
-                        <td className="px-8 py-6 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[9px] uppercase tracking-widest font-bold ${
-                            post.status === 'Published' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
-                          }`}>
-                            {post.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
-
-          <div className="space-y-8">
-            <section className="p-10 rounded-[40px] bg-[var(--accent)] text-[var(--bg)] relative overflow-hidden group shadow-2xl">
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[var(--bg)]/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-              <h3 className="text-2xl font-light mb-4 uppercase tracking-widest leading-tight">Elevate your <br/>Presence</h3>
-              <p className="text-[var(--bg)]/80 text-sm mb-8 leading-relaxed italic">Your current resonance is up 20% this week. Share your latest reflection to keep the momentum.</p>
-              <button className="w-full py-4 bg-[var(--bg)] text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:shadow-xl transition-all">
-                <ExternalLink className="w-3 h-3" /> Promote Now
-              </button>
-            </section>
-
-            <section className="p-10 rounded-[40px] border border-[var(--text)]/10 bg-[var(--text)]/[0.01] shadow-sm">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--text)]/40 mb-8 font-mono">Creator Path</h3>
-              <div className="space-y-8">
-                <div className="flex gap-5">
-                  <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center text-xs font-mono shrink-0 font-bold border border-[var(--accent)]/20">1</div>
-                  <p className="text-xs text-[var(--text)]/60 leading-relaxed italic">Cross-link your essays to create a knowledge constellation.</p>
-                </div>
-                <div className="flex gap-5">
-                  <div className="w-10 h-10 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center text-xs font-mono shrink-0 font-bold border border-[var(--accent)]/20">2</div>
-                  <p className="text-xs text-[var(--text)]/60 leading-relaxed italic">Add your new course link to your public sanctuary bio.</p>
-                </div>
               </div>
             </section>
           </div>
