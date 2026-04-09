@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import sanityFetch from '@/lib/sanity';
 import { useAuth } from '@/lib/auth-context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Lock, ArrowLeft, PenTool } from 'lucide-react';
+import { Lock, AlertCircle, ArrowLeft } from 'lucide-react';
 
 type Post = {
   _id: string;
@@ -82,6 +82,21 @@ function AdminContent() {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
   return (
