@@ -24,7 +24,11 @@ function SignupContent() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback${plan === 'writer' ? '?next=/pricing' : ''}`,
+        // Important: Pass the data metadata so the callback knows the plan
+        data: {
+          plan: plan || 'seeker'
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${plan === 'writer' ? '/pricing' : '/blog'}`,
       },
     });
 
