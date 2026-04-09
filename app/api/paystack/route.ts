@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { userId, userEmail, amount } = await req.json();
+    const { userId, userEmail } = await req.json();
 
-    // Paystack expects amount in Kobo/Cents (e.g., $9.00 = 900)
-    // If you want to charge in KES, you'd change the currency below
-    const paystackAmount = amount * 100; 
+    // Convert $9 to KES (Standard rate approx 1200 KES)
+    // Paystack KES amounts are in cents (1200.00 = 120000)
+    const kesAmount = 1200 * 100; 
 
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
@@ -16,18 +16,13 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         email: userEmail,
-        amount: paystackAmount,
-        currency: 'USD', // Paystack supports USD, KES, NGN etc.
+        amount: kesAmount,
+        currency: 'KES', // Switched to KES for Kenya compatibility
+        channels: ['card', 'mobile_money', 'bank_transfer'], // Explicitly enable M-Pesa
         callback_url: `${req.headers.get('origin')}/writer/dashboard?status=success`,
         metadata: {
           userId: userId,
-          custom_fields: [
-            {
-              display_name: "Plan",
-              variable_name: "plan",
-              value: "Writer Subscription"
-            }
-          ]
+          plan: "Writer Subscription"
         }
       })
     });
@@ -37,7 +32,9 @@ export async function POST(req: Request) {
     if (data.status) {
       return NextResponse.json({ url: data.data.authorization_url });
     } else {
-      return NextResponse.json({ error: data.message || 'Paystack initialization failed' }, { status: 400 });
+      // Log the specific error from Paystack for debugging
+      console.error('Paystack Error:', data.message);
+      return NextResponse.json({ error: data.message }, { status: 400 });
     }
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
