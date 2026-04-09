@@ -5,8 +5,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   
-  // The 'next' parameter allows us to capture where the user should go after confirming
-  // We will force Writers to go to /pricing to pay their subscription
+  // Default path if no specific instruction is found
   let next = searchParams.get('next') ?? '/blog';
 
   if (code) {
@@ -19,16 +18,40 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error && data?.user) {
-      // Logic: If they just signed up via the 'plan=writer' flow, send them to pay
-      const userMetadata = data.user.user_metadata;
+      const user = data.user;
+      const userMetadata = user.user_metadata;
+
+      // PRO LOGIC: If they are a writer, trigger the checkout session immediately
       if (next.includes('/pricing') || userMetadata?.plan === 'writer') {
-        return NextResponse.redirect(`${origin}/pricing`);
+        try {
+          // We call our own API to generate a Stripe session for this confirmed user
+          const checkoutResponse = await fetch(`${origin}/api/checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              userEmail: user.email,
+            }),
+          });
+
+          const checkoutData = await checkoutResponse.json();
+          
+          if (checkoutData.url) {
+            // DIRECT TO STRIPE: Send them straight to the payment gateway
+            return NextResponse.redirect(checkoutData.url);
+          }
+        } catch (checkoutErr) {
+          console.error('Auto-checkout failed:', checkoutErr);
+          // Fallback to pricing page if auto-checkout fails
+          return NextResponse.redirect(`${origin}/pricing`);
+        }
       }
       
+      // If seeker or already paid, send to the original destination
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  // Fallback to login with an error message if something went wrong
+  // Handle failure
   return NextResponse.redirect(`${origin}/login?error=auth-callback-failed`);
 }
