@@ -12,7 +12,6 @@ import {
   Settings, 
   Plus, 
   ExternalLink,
-  CreditCard,
   CheckCircle2,
   Loader2,
   Sparkles,
@@ -38,19 +37,19 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [connectLoading, setConnectLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     if (user) {
-      checkSubscriptionAndFetchData();
+      const isComingFromPayment = searchParams.get('status') === 'success';
+      checkSubscriptionAndFetchData(isComingFromPayment);
     }
   }, [user]);
 
-  async function checkSubscriptionAndFetchData() {
+  async function checkSubscriptionAndFetchData(retry = false) {
     try {
       const { data: profileData, error: profileErr } = await supabase
         .from('profiles')
@@ -60,13 +59,23 @@ function DashboardContent() {
       
       if (profileErr) throw profileErr;
 
-      // If they aren't active, send to pricing
+      // GRACEFUL VERIFICATION: If the webhook is slow, wait and try one more time
+      if (profileData?.subscription_status !== 'active' && retry) {
+        setIsVerifying(true);
+        // Wait 3 seconds for the webhook to catch up
+        await new Promise(resolve => setTimeout(resolve, 3500));
+        return checkSubscriptionAndFetchData(false); // Try once more without retry
+      }
+
+      // If STILL not active after retry, then redirect
       if (profileData?.subscription_status !== 'active') {
         router.push('/pricing');
         return;
       }
 
+      // If active, proceed normally
       setProfile(profileData);
+      setIsVerifying(false);
       
       const { data: productsData } = await supabase
         .from('products')
@@ -85,15 +94,21 @@ function DashboardContent() {
     }
   }
 
-  if (loading) return (
+  if (loading || isVerifying) return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
-      <p className="font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">Verifying Presence...</p>
+      <div className="text-center">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--accent)] opacity-20" />
+        <p className="font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">
+          {isVerifying ? 'Finalizing Presence...' : 'Entering Sanctuary'}
+        </p>
+      </div>
     </div>
   );
 
   return (
     <main className="min-h-screen p-6 md:p-12 bg-[var(--bg)] transition-colors duration-500">
       <div className="max-w-6xl mx-auto pt-16">
+        
         <AnimatePresence>
           {showSuccess && (
             <motion.div 
@@ -107,8 +122,8 @@ function DashboardContent() {
                   <Sparkles className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-light text-[var(--text)] mb-1 uppercase tracking-widest">Welcome to the Sanctuary</h3>
-                  <p className="text-sm text-[var(--text)]/60 italic">Your writer subscription is active.</p>
+                  <h3 className="text-2xl font-light text-[var(--text)] mb-1 uppercase tracking-widest leading-none">Welcome to the Sanctuary</h3>
+                  <p className="text-sm text-[var(--text)]/60 italic mt-2">Your writer subscription is active. Your voice is now part of the collective.</p>
                 </div>
               </div>
               <button onClick={() => setShowSuccess(false)} className="p-2 text-[var(--text)]/20 hover:text-[var(--text)]"><X /></button>
@@ -121,20 +136,20 @@ function DashboardContent() {
             <motion.h1 className="text-4xl font-light text-[var(--text)] uppercase tracking-[0.2em]">
               Creator <span className="italic text-[var(--accent)]">Sanctuary</span>
             </motion.h1>
-            <p className="text-[var(--text)]/40 text-[10px] uppercase tracking-widest font-mono font-bold">
+            <p className="text-[var(--text)]/40 text-[10px] uppercase tracking-widest font-mono font-bold mt-2">
               Welcome back, {profile?.username || user?.email?.split('@')[0]}
             </p>
           </div>
           <div className="flex gap-4">
             <Link href="/studio">
-              <button className="px-6 py-3 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
+              <button className="px-6 py-3 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 shadow-lg transition-all hover:scale-[1.02]">
                 <PenTool className="w-4 h-4" /> New Essay
               </button>
             </Link>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
             { label: 'Total Readers', value: '1,240', icon: <Users className="w-5 h-5" />, color: 'text-blue-400' },
             { label: 'Total Earnings', value: '$420.50', icon: <DollarSign className="w-5 h-5" />, color: 'text-emerald-400' },
@@ -150,6 +165,39 @@ function DashboardContent() {
             </div>
           ))}
         </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-8">
+            <section>
+              <div className="flex items-center justify-between mb-8 px-4">
+                <div className="flex items-center gap-3">
+                  <Plus className="w-5 h-5 text-[var(--accent)]" />
+                  <h2 className="text-xl font-light text-[var(--text)] uppercase tracking-widest">Digital Products</h2>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {products.map((product) => (
+                  <div key={product.id} className="p-8 rounded-[32px] border border-[var(--text)]/10 bg-[var(--text)]/[0.02] flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] text-[var(--accent)] uppercase font-bold tracking-widest mb-1">{product.type}</div>
+                      <h3 className="text-base font-light text-[var(--text)] mb-1">{product.title}</h3>
+                      <div className="text-xl font-light text-[var(--text)]/60">{product.price}</div>
+                    </div>
+                    <LinkIcon className="w-4 h-4 text-[var(--text)]/20" />
+                  </div>
+                ))}
+                
+                <Link href="/writer/settings" className="block">
+                  <button className="w-full h-full p-8 rounded-[32px] border-2 border-dashed border-[var(--text)]/10 text-[var(--text)]/20 hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all flex flex-col items-center justify-center gap-3">
+                    <Plus className="w-8 h-8" />
+                    <span className="text-[10px] uppercase tracking-[0.3em] font-bold">New Offering</span>
+                  </button>
+                </Link>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
     </main>
   );
@@ -158,7 +206,7 @@ function DashboardContent() {
 export default function WriterDashboard() {
   return (
     <ProtectedRoute>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] font-mono uppercase tracking-[0.5em] text-[10px]">Entering Sanctuary</div>}>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)] font-mono uppercase tracking-[0.5em] text-[10px]">Initializing Sanctuary...</div>}>
         <DashboardContent />
       </Suspense>
     </ProtectedRoute>
