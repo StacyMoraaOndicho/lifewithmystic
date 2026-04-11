@@ -20,7 +20,7 @@ const plans = [
     buttonText: 'Join as Seeker',
     action: 'signup',
     highlight: false,
-    icon: <Star className="w-6 h-6" />
+    icon: <Star className="w-5 h-5 text-white/40" />
   },
   {
     name: 'Writer',
@@ -38,32 +38,14 @@ const plans = [
     buttonText: 'Start Writing',
     action: 'subscribe',
     highlight: true,
-    icon: <PenTool className="w-6 h-6" />
+    icon: <PenTool className="w-5 h-5 text-[var(--accent)]" />
   }
 ];
 
 const paymentMethods = [
-  {
-    id: 'paystack_mpesa',
-    name: 'M-Pesa / Mobile Money',
-    description: 'Direct STK Push or manual transfer',
-    icon: <Smartphone className="w-5 h-5 text-emerald-500" />,
-    tag: 'Kenya Special'
-  },
-  {
-    id: 'paystack_card',
-    name: 'Credit / Debit Card',
-    description: 'Supports all African and Global cards',
-    icon: <Globe className="w-5 h-5 text-blue-400" />,
-    tag: 'Africa & Global'
-  },
-  {
-    id: 'paystack_bank',
-    name: 'Bank Transfer',
-    description: 'Secure direct bank payments',
-    icon: <CreditCard className="w-5 h-5 text-yellow-500" />,
-    tag: 'Direct'
-  }
+  { id: 'paystack_mpesa', name: 'M-Pesa / Mobile Money', icon: <Smartphone className="w-5 h-5 text-emerald-500" />, tag: 'Kenya Special' },
+  { id: 'paystack_card', name: 'Credit / Debit Card', icon: <Globe className="w-5 h-5 text-blue-400" />, tag: 'Africa & Global' },
+  { id: 'paystack_bank', name: 'Bank Transfer', icon: <CreditCard className="w-5 h-5 text-yellow-500" />, tag: 'Direct' }
 ];
 
 export default function PricingPage() {
@@ -78,39 +60,30 @@ export default function PricingPage() {
       router.push('/signup');
       return;
     }
-
     if (!user) {
       router.push('/signup?plan=writer');
       return;
     }
-
     setShowPaymentOptions(true);
   };
 
-  const handlePaymentMethod = async (methodId: string) => {
-    setLoading(methodId);
+  const handlePaymentMethod = async () => {
+    setLoading('payment');
     setErrorMessage(null);
-    
     try {
       const res = await fetch('/api/paystack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user?.id, 
-          userEmail: user?.email,
-          amount: 9, 
-        }),
+        body: JSON.stringify({ userId: user?.id, userEmail: user?.email }),
       });
-
       const data = await res.json();
-      
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        setErrorMessage(data.error || 'Gateway is currently unavailable.');
+        setErrorMessage(data.error || 'Gateway unavailable.');
       }
     } catch (err) {
-      setErrorMessage('A connection error occurred. Please check your internet.');
+      setErrorMessage('Connection error.');
     } finally {
       setLoading(null);
     }
@@ -119,19 +92,18 @@ export default function PricingPage() {
   return (
     <main className="min-h-screen py-24 px-6 bg-[var(--bg)] transition-colors duration-500">
       <div className="max-w-6xl mx-auto pt-16">
-        <div className="text-center mb-20">
+        <div className="text-center mb-24">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-light mb-6 text-[var(--text)] tracking-tight uppercase"
+            className="text-6xl font-light mb-6 text-white tracking-tight uppercase"
           >
-            Choose your <span className="text-[var(--accent)] italic font-serif capitalize">Path</span>
+            Choose your <span className="italic font-serif text-[var(--accent)]">Path</span>
           </motion.h1>
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-[var(--text)]/50 text-xl font-light max-w-2xl mx-auto leading-relaxed italic"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-white/40 text-sm italic max-w-xl mx-auto leading-relaxed"
           >
             Whether you are here to absorb the light or to radiate your own wisdom, there is a place for you.
           </motion.p>
@@ -144,44 +116,32 @@ export default function PricingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.2 }}
-              className={`relative p-10 rounded-[40px] border ${
-                plan.highlight 
-                  ? 'border-[var(--accent)] bg-[var(--accent)]/[0.03] shadow-[0_0_40px_-15px_rgba(var(--accent-rgb),0.2)]' 
-                  : 'border-[var(--text)]/10 bg-[var(--text)]/[0.02]'
-              } flex flex-col`}
+              className={`relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col`}
             >
               {plan.highlight && (
                 <div 
-                  style={{ 
-                    boxShadow: "0 0 20px rgba(var(--accent-rgb), 0.8), 0 0 40px rgba(var(--accent-rgb), 0.4)",
-                    backgroundColor: "var(--accent)",
-                    color: "white",
-                    textShadow: "0 0 10px rgba(255,255,255,0.5)"
-                  }}
-                  className="absolute -top-10 left-1/2 -translate-x-1/2 px-8 py-2.5 text-[11px] font-black uppercase tracking-[0.4em] rounded-full z-20 whitespace-nowrap border-2 border-white/20"
+                  className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 glass rounded-lg shadow-[0_0_20px_rgba(var(--accent-rgb),0.4)] z-20 border border-white/20"
                 >
-                  Most Chosen
+                  <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white">Most Chosen</span>
                 </div>
               )}
 
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className={`p-3 rounded-2xl ${plan.highlight ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'bg-[var(--text)]/10 text-[var(--text)]/40'}`}>
-                    {plan.icon}
-                  </div>
-                  <h3 className="text-2xl font-light text-[var(--text)] uppercase tracking-[0.2em]">{plan.name}</h3>
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-2xl font-light text-white uppercase tracking-[0.2em]">{plan.name}</h3>
+                  {plan.icon}
                 </div>
-                <p className="text-[var(--text)]/40 text-sm italic mb-8">{plan.description}</p>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-6xl font-light text-[var(--text)]">{plan.price}</span>
-                  {plan.period && <span className="text-[var(--text)]/20 text-xs uppercase tracking-[0.2em] ml-2">{plan.period}</span>}
+                <p className="text-white/30 text-xs italic mb-8 leading-relaxed">{plan.description}</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-7xl font-light text-white">{plan.price}</span>
+                  {plan.period && <span className="text-white/20 text-xs uppercase tracking-widest ml-2">{plan.period}</span>}
                 </div>
               </div>
 
-              <ul className="space-y-5 mb-12 flex-1">
+              <ul className="space-y-6 mb-12 flex-1">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-4 text-sm text-[var(--text)]/70">
-                    <Check className="w-5 h-5 text-[var(--accent)] shrink-0" />
+                  <li key={feature} className="flex items-start gap-4 text-sm text-white/60">
+                    <Check className="w-4 h-4 text-white/20 mt-0.5" />
                     <span className="font-light">{feature}</span>
                   </li>
                 ))}
@@ -189,10 +149,10 @@ export default function PricingPage() {
 
               <button 
                 onClick={() => handleAction(plan)}
-                className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-xs font-bold transition-all ${
+                className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-[10px] font-bold transition-all ${
                   plan.highlight 
-                    ? 'bg-[var(--accent)] text-white hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)]' 
-                    : 'bg-transparent text-[var(--text)] border border-[var(--text)]/10 hover:bg-[var(--text)]/5'
+                    ? 'bg-white text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
+                    : 'bg-transparent text-white border border-white/10 hover:bg-white/5'
                 }`}
               >
                 {plan.buttonText}
@@ -207,47 +167,27 @@ export default function PricingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md"
             >
-              <motion.div 
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                className="bg-[#0a0a0a] border border-white/10 w-full max-w-lg rounded-[40px] p-10 relative shadow-2xl"
-              >
-                <button onClick={() => setShowPaymentOptions(false)} className="absolute top-8 right-8 p-2 text-white/20 hover:text-white"><X /></button>
-
-                <div className="text-center mb-10">
-                  <h2 className="text-2xl font-light text-white mb-2 uppercase tracking-widest">Payment Gateway</h2>
-                  <p className="text-white/40 text-[10px] uppercase tracking-widest leading-loose">Choose your path to enter the sanctuary.</p>
-                </div>
-
+              <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-[#0a0a0a] border border-white/10 w-full max-w-lg rounded-[40px] p-12 relative shadow-3xl text-center">
+                <button onClick={() => setShowPaymentOptions(false)} className="absolute top-10 right-10 p-2 text-white/20 hover:text-white"><X className="w-6 h-6" /></button>
+                <h2 className="text-3xl font-light text-white mb-2 uppercase tracking-[0.2em]">Select Gateway</h2>
+                <p className="text-white/30 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
                 <div className="space-y-4">
                   {paymentMethods.map((method) => (
-                    <button
-                      key={method.id}
-                      onClick={() => handlePaymentMethod(method.id)}
-                      disabled={!!loading}
-                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-white/[0.05] transition-all flex items-center justify-between group"
-                    >
+                    <button key={method.id} onClick={handlePaymentMethod} disabled={!!loading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group">
                       <div className="flex items-center gap-5">
-                        <div className="p-3 rounded-2xl bg-white/5 group-hover:scale-110 transition-transform">
-                          {method.icon}
-                        </div>
+                        <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div className="text-left">
-                          <h4 className="text-white font-medium">{method.name}</h4>
+                          <h4 className="text-white font-medium text-sm">{method.name}</h4>
                           <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{method.tag}</p>
                         </div>
                       </div>
-                      {loading === method.id ? <Loader2 className="w-4 h-4 animate-spin text-white/20" /> : <ChevronRight className="w-4 h-4 text-white/10" />}
+                      <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-white transition-all" />
                     </button>
                   ))}
                 </div>
-
-                {errorMessage && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-center">
-                    <p className="text-[10px] uppercase font-bold tracking-widest">{errorMessage}</p>
-                  </motion.div>
-                )}
+                {errorMessage && <p className="mt-8 text-[10px] uppercase font-bold tracking-widest text-red-500">{errorMessage}</p>}
               </motion.div>
             </motion.div>
           )}
