@@ -32,6 +32,9 @@ type Product = {
   link: string;
 };
 
+// MASTER ADMIN EMAIL
+const ADMIN_EMAIL = "lifewithmystic@gmail.com";
+
 function DashboardContent() {
   const { user } = useAuth();
   const router = useRouter();
@@ -68,11 +71,14 @@ function DashboardContent() {
       
       if (profileErr) throw profileErr;
 
-      // STRICT SECURITY: Must be a writer AND active
+      // --- SECURITY & ACCESS LOGIC ---
+      const isAdmin = user?.email === ADMIN_EMAIL;
       const isWriter = profileData?.role === 'writer' || user?.user_metadata?.plan === 'writer';
       const isActive = profileData?.subscription_status === 'active';
 
-      if ((!isWriter || !isActive) && redirectOnFail) {
+      // If you are the admin, you get a free pass. 
+      // Otherwise, you must be an active writer.
+      if (!isAdmin && (!isWriter || !isActive) && redirectOnFail) {
         router.push('/pricing');
         return;
       }
@@ -127,7 +133,7 @@ function DashboardContent() {
                   <Sparkles className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-light text-[var(--text)] mb-1 uppercase tracking-widest">Welcome to the Sanctuary</h3>
+                  <h3 className="text-2xl font-light text-[var(--text)] mb-1 uppercase tracking-widest leading-none">Welcome to the Sanctuary</h3>
                   <p className="text-sm text-[var(--text)]/60 italic">Your writer subscription is active. Your voice is now part of the collective.</p>
                 </div>
               </div>
