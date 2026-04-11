@@ -19,7 +19,8 @@ const plans = [
     ],
     buttonText: 'Join as Seeker',
     action: 'signup',
-    highlight: false
+    highlight: false,
+    icon: <Star className="w-6 h-6" />
   },
   {
     name: 'Writer',
@@ -97,7 +98,7 @@ export default function PricingPage() {
         body: JSON.stringify({ 
           userId: user?.id, 
           userEmail: user?.email,
-          amount: 9, // $9.00
+          amount: 9, 
         }),
       });
 
@@ -126,6 +127,14 @@ export default function PricingPage() {
           >
             Choose your <span className="text-[var(--accent)] italic font-serif capitalize">Path</span>
           </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-[var(--text)]/50 text-xl font-light max-w-2xl mx-auto leading-relaxed italic"
+          >
+            Whether you are here to absorb the light or to radiate your own wisdom, there is a place for you.
+          </motion.p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
@@ -158,7 +167,12 @@ export default function PricingPage() {
               )}
 
               <div className="mb-8">
-                <h3 className="text-2xl font-light text-[var(--text)] uppercase tracking-[0.2em] mb-2">{plan.name}</h3>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className={`p-3 rounded-2xl ${plan.highlight ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'bg-[var(--text)]/10 text-[var(--text)]/40'}`}>
+                    {plan.icon}
+                  </div>
+                  <h3 className="text-2xl font-light text-[var(--text)] uppercase tracking-[0.2em]">{plan.name}</h3>
+                </div>
                 <p className="text-[var(--text)]/40 text-sm italic mb-8">{plan.description}</p>
                 <div className="flex items-baseline gap-1 mb-4">
                   <span className="text-6xl font-light text-[var(--text)]">{plan.price}</span>
@@ -169,7 +183,7 @@ export default function PricingPage() {
               <ul className="space-y-5 mb-12 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-4 text-sm text-[var(--text)]/70">
-                    <Check className="w-5 h-5 text-[var(--text)]/20 shrink-0" />
+                    <Check className="w-5 h-5 text-[var(--accent)] shrink-0" />
                     <span className="font-light">{feature}</span>
                   </li>
                 ))}
@@ -206,7 +220,7 @@ export default function PricingPage() {
 
                 <div className="text-center mb-10">
                   <h2 className="text-2xl font-light text-white mb-2 uppercase tracking-widest">Payment Gateway</h2>
-                  <p className="text-white/40 text-[10px] uppercase tracking-widest">Kenya & Africa Optimized</p>
+                  <p className="text-white/40 text-[10px] uppercase tracking-widest leading-loose">Choose your path to enter the sanctuary.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -218,13 +232,15 @@ export default function PricingPage() {
                       className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-white/[0.05] transition-all flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-5">
-                        <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
+                        <div className="p-3 rounded-2xl bg-white/5 group-hover:scale-110 transition-transform">
+                          {method.icon}
+                        </div>
                         <div className="text-left">
                           <h4 className="text-white font-medium">{method.name}</h4>
                           <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{method.tag}</p>
                         </div>
                       </div>
-                      {loading === method.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4 text-white/10" />}
+                      {loading === method.id ? <Loader2 className="w-4 h-4 animate-spin text-white/20" /> : <ChevronRight className="w-4 h-4 text-white/10" />}
                     </button>
                   ))}
                 </div>
