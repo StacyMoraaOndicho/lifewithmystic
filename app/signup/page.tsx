@@ -20,15 +20,17 @@ function SignupContent() {
     setLoading(true);
     setMessage('');
 
+    // FORCE REDIRECT FOR WRITERS: This ensures the email link goes to /pricing
+    const redirectTo = plan === 'writer' 
+      ? `${window.location.origin}/auth/callback?next=/pricing` 
+      : `${window.location.origin}/auth/callback?next=/blog`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        // Important: Pass the data metadata so the callback knows the plan
-        data: {
-          plan: plan || 'seeker'
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${plan === 'writer' ? '/pricing' : '/blog'}`,
+        data: { plan: plan || 'seeker' },
+        emailRedirectTo: redirectTo,
       },
     });
 
