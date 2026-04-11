@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const body = await req.text();
   const signature = req.headers.get('x-paystack-signature');
 
-  // 1. Verify the signature to ensure it really came from Paystack
+  // Verify the signature
   const hash = crypto
     .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY!)
     .update(body)
@@ -18,20 +18,23 @@ export async function POST(req: Request) {
 
   const event = JSON.parse(body);
 
-  // 2. Handle the 'charge.success' event
   if (event.event === 'charge.success') {
-    const userId = event.data.metadata.userId;
+    const userId = event.data.metadata?.userId;
 
     if (userId) {
-      // Update user to 'active' in Supabase
+      // UPSERT: This creates the profile if it doesn't exist, OR updates it if it does.
+      // This ensures the user is ALWAYS marked as active after paying.
       const { error } = await supabase
         .from('profiles')
-        .update({ subscription_status: 'active' })
-        .eq('id', userId);
+        .upsert({ 
+          id: userId, 
+          subscription_status: 'active',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
 
       if (error) {
-        console.error('Database update failed:', error);
-        return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
+        console.error('Database sync failed:', error.message);
+        return NextResponse.json({ error: 'DB sync failed' }, { status: 500 });
       }
     }
   }
