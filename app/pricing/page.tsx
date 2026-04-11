@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Star, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const plans = [
   {
@@ -48,12 +48,20 @@ const paymentMethods = [
   { id: 'paystack_bank', name: 'Bank Transfer', icon: <CreditCard className="w-5 h-5 text-yellow-500" />, tag: 'Direct' }
 ];
 
-export default function PricingPage() {
+function PricingContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState<string | null>(null);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // AUTO-TRIGGER: Open payment options if they just confirmed email
+  useEffect(() => {
+    if (searchParams.get('status') === 'confirmed' && user) {
+      setShowPaymentOptions(true);
+    }
+  }, [searchParams, user]);
 
   const handleAction = async (plan: any) => {
     if (plan.action === 'signup') {
@@ -67,8 +75,8 @@ export default function PricingPage() {
     setShowPaymentOptions(true);
   };
 
-  const handlePaymentMethod = async () => {
-    setLoading('payment');
+  const handlePaymentMethod = async (methodId: string) => {
+    setLoading(methodId);
     setErrorMessage(null);
     try {
       const res = await fetch('/api/paystack', {
@@ -91,7 +99,7 @@ export default function PricingPage() {
 
   return (
     <main className="min-h-screen py-24 px-6 bg-[var(--bg)] transition-colors duration-500">
-      <div className="max-w-6xl mx-auto pt-16">
+      <div className="max-w-6xl mx-auto pt-16 font-light">
         <div className="text-center mb-24">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
@@ -172,10 +180,15 @@ export default function PricingPage() {
               <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-[#0a0a0a] border border-white/10 w-full max-w-lg rounded-[40px] p-12 relative shadow-3xl text-center">
                 <button onClick={() => setShowPaymentOptions(false)} className="absolute top-10 right-10 p-2 text-white/20 hover:text-white"><X className="w-6 h-6" /></button>
                 <h2 className="text-3xl font-light text-white mb-2 uppercase tracking-[0.2em]">Select Gateway</h2>
-                <p className="text-white/30 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
+                <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
                 <div className="space-y-4">
                   {paymentMethods.map((method) => (
-                    <button key={method.id} onClick={handlePaymentMethod} disabled={!!loading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group">
+                    <button 
+                      key={method.id} 
+                      onClick={() => handlePaymentMethod(method.id)} 
+                      disabled={!!loading} 
+                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group"
+                    >
                       <div className="flex items-center gap-5">
                         <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div className="text-left">
@@ -183,7 +196,7 @@ export default function PricingPage() {
                           <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{method.tag}</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-white transition-all" />
+                      {loading === method.id ? <Loader2 className="w-4 h-4 animate-spin text-white/20" /> : <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-white transition-all" />}
                     </button>
                   ))}
                 </div>
@@ -194,5 +207,13 @@ export default function PricingPage() {
         </AnimatePresence>
       </div>
     </main>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono text-[10px] uppercase tracking-[0.5em]">Initializing Gateway...</div>}>
+      <PricingContent />
+    </Suspense>
   );
 }
