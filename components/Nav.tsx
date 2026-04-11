@@ -64,7 +64,7 @@ export default function Nav() {
       >
         <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between h-12 md:h-16">
           
-          <Link href="/" className="text-base md:text-lg font-light tracking-[0.2em] uppercase whitespace-nowrap shrink-0 mr-12">
+          <Link href="/" className="text-base md:text-lg font-light tracking-[0.3em] uppercase whitespace-nowrap shrink-0 mr-12">
             lifewithmystic
           </Link>
 
@@ -74,15 +74,15 @@ export default function Nav() {
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="h-6 w-[2px] bg-white shrink-0 mr-6 shadow-[0_0_10px_#fff]" 
+                className="h-6 w-[2px] bg-white shrink-0 mr-10 shadow-[0_0_10px_#fff]" 
               />
               
-              <div className="flex items-center gap-10 lg:gap-14 px-2">
+              <div className="flex items-center gap-14 lg:gap-20 px-4">
                 {navLinks.map(link => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-sm lg:text-base whitespace-nowrap font-light shrink-0 uppercase tracking-widest"
+                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-[9px] lg:text-[10px] whitespace-nowrap font-bold shrink-0 uppercase tracking-[0.3em]"
                   >
                     {link.label}
                   </Link>
@@ -93,7 +93,7 @@ export default function Nav() {
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                className="h-6 w-[2px] bg-white shrink-0 ml-6 shadow-[0_0_10px_#fff]" 
+                className="h-6 w-[2px] bg-white shrink-0 ml-10 shadow-[0_0_10px_#fff]" 
               />
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function Nav() {
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Link href="/login" className="text-xs opacity-60 hover:opacity-100 transition-all uppercase tracking-widest">
+                  <Link href="/login" className="text-[10px] opacity-60 hover:opacity-100 transition-all uppercase tracking-widest">
                     Login
                   </Link>
                   
