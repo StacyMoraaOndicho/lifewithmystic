@@ -154,9 +154,11 @@ export default function PricingPage() {
                 <div 
                   style={{ 
                     boxShadow: "0 0 20px rgba(var(--accent-rgb), 0.8), 0 0 40px rgba(var(--accent-rgb), 0.4)",
-                    filter: "drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.5))"
+                    backgroundColor: "var(--accent)",
+                    color: "white",
+                    textShadow: "0 0 10px rgba(255,255,255,0.5)"
                   }}
-                  className="absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full z-10 whitespace-nowrap border border-white/20"
+                  className="absolute -top-10 left-1/2 -translate-x-1/2 px-8 py-2.5 text-[11px] font-black uppercase tracking-[0.4em] rounded-full z-20 whitespace-nowrap border-2 border-white/20"
                 >
                   Most Chosen
                 </div>
@@ -189,7 +191,7 @@ export default function PricingPage() {
                 onClick={() => handleAction(plan)}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-xs font-bold transition-all ${
                   plan.highlight 
-                    ? 'bg-[var(--accent)] text-[var(--bg)] hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)]' 
+                    ? 'bg-[var(--accent)] text-white hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)]' 
                     : 'bg-transparent text-[var(--text)] border border-[var(--text)]/10 hover:bg-[var(--text)]/5'
                 }`}
               >
@@ -228,7 +230,9 @@ export default function PricingPage() {
                       className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-white/[0.05] transition-all flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-5">
-                        <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
+                        <div className="p-3 rounded-2xl bg-white/5 group-hover:scale-110 transition-transform">
+                          {method.icon}
+                        </div>
                         <div className="text-left">
                           <h4 className="text-white font-medium">{method.name}</h4>
                           <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{method.tag}</p>
