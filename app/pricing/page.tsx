@@ -45,7 +45,7 @@ const plans = [
 const paymentMethods = [
   { id: 'paystack_mpesa', name: 'M-Pesa / Mobile Money', icon: <Smartphone className="w-5 h-5 text-emerald-500" />, tag: 'Kenya Special' },
   { id: 'paystack_card', name: 'Credit / Debit Card', icon: <Globe className="w-5 h-5 text-blue-400" />, tag: 'Africa & Global' },
-  { id: 'paystack_bank', name: 'Bank Transfer', icon: <CreditCard className="w-5 h-5 text-yellow-500" />, tag: 'Direct' }
+  { id: 'paystack_bank', name: 'Bank Transfer (Pesalink)', icon: <CreditCard className="w-5 h-5 text-yellow-500" />, tag: 'Direct' }
 ];
 
 function PricingContent() {
@@ -56,13 +56,13 @@ function PricingContent() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Aggressive Auto-Trigger for Payment Popup
+  // AUTO-TRIGGER PAYMENT: This is the "Paystack Part" you requested
   useEffect(() => {
     const status = searchParams.get('status');
-    if (status === 'confirmed') {
-      setShowPaymentOptions(true);
+    if (status === 'confirmed' && user) {
+      handlePaymentMethod('auto');
     }
-  }, [searchParams]);
+  }, [searchParams, user]);
 
   const handleAction = async (plan: any) => {
     if (plan.action === 'signup') {
@@ -83,16 +83,21 @@ function PricingContent() {
       const res = await fetch('/api/paystack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, userEmail: user?.email }),
+        body: JSON.stringify({ 
+          userId: user?.id, 
+          userEmail: user?.email,
+          amount: 9 
+        }),
       });
       const data = await res.json();
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        setErrorMessage(data.error || 'Gateway unavailable.');
+        setShowPaymentOptions(true); // Open options if auto-redirect fails
+        setErrorMessage(data.error || 'Gateway initialization failed.');
       }
     } catch (err) {
-      setErrorMessage('Connection error.');
+      setErrorMessage('Connection to Paystack sanctuary lost.');
     } finally {
       setLoading(null);
     }
@@ -158,13 +163,14 @@ function PricingContent() {
 
               <button 
                 onClick={() => handleAction(plan)}
+                disabled={loading === 'auto'}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-[10px] font-bold transition-all ${
                   plan.highlight 
                     ? 'bg-white text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
                     : 'bg-transparent text-white border border-white/10 hover:bg-white/5'
-                }`}
+                } disabled:opacity-50`}
               >
-                {plan.buttonText}
+                {loading === 'auto' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : plan.buttonText}
               </button>
             </motion.div>
           ))}
@@ -184,7 +190,12 @@ function PricingContent() {
                 <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
                 <div className="space-y-4">
                   {paymentMethods.map((method) => (
-                    <button key={method.id} onClick={() => handlePaymentMethod(method.id)} disabled={!!loading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group">
+                    <button 
+                      key={method.id} 
+                      onClick={() => handlePaymentMethod(method.id)} 
+                      disabled={!!loading} 
+                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group"
+                    >
                       <div className="flex items-center gap-5">
                         <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div className="text-left">
