@@ -1,3 +1,4 @@
+// Updated at: 2026-04-10T02:45:00Z
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
@@ -17,9 +18,9 @@ export async function GET(request: Request) {
       const user = data.user;
       const plan = user.user_metadata?.plan;
 
-      // If it's a writer, always force them to pricing to finalize payment if they haven't yet
-      if (plan === 'writer' || next.includes('/pricing')) {
-        return NextResponse.redirect(`${origin}/pricing?status=confirmed`);
+      // MANDATORY: If they are a writer, they MUST go to pricing to be forced into Paystack
+      if (plan === 'writer') {
+        return NextResponse.redirect(`${origin}/pricing?status=confirmed&plan=writer&ts=${Date.now()}`);
       }
       
       return NextResponse.redirect(`${origin}${next}`);
