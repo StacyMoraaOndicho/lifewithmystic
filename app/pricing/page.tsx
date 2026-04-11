@@ -137,27 +137,50 @@ export default function PricingPage() {
               transition={{ delay: idx * 0.2 }}
               className={`relative p-10 rounded-[40px] border ${
                 plan.highlight 
-                  ? 'border-[var(--accent)] bg-[var(--accent)]/[0.03]' 
+                  ? 'border-[var(--accent)] bg-[var(--accent)]/[0.03] shadow-[0_0_40px_-15px_rgba(var(--accent-rgb),0.3)]' 
                   : 'border-[var(--text)]/10 bg-[var(--text)]/[0.02]'
               } flex flex-col`}
             >
-              <h3 className="text-2xl font-light text-[var(--text)] uppercase tracking-[0.2em] mb-6">{plan.name}</h3>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-6xl font-light text-[var(--text)]">{plan.price}</span>
-                {plan.period && <span className="text-[var(--text)]/40 text-sm uppercase tracking-[0.3em] ml-2">{plan.period}</span>}
+              {plan.highlight && (
+                <motion.div 
+                  animate={{ 
+                    boxShadow: [
+                      "0 0 10px rgba(var(--accent-rgb), 0.3)",
+                      "0 0 30px rgba(var(--accent-rgb), 0.8)",
+                      "0 0 10px rgba(var(--accent-rgb), 0.3)"
+                    ]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -top-8 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full z-10"
+                >
+                  Most Chosen
+                </motion.div>
+              )}
+
+              <div className="mb-8">
+                <h3 className="text-2xl font-light text-[var(--text)] uppercase tracking-[0.2em] mb-2">{plan.name}</h3>
+                <p className="text-[var(--text)]/40 text-sm italic mb-8">{plan.description}</p>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-6xl font-light text-[var(--text)]">{plan.price}</span>
+                  {plan.period && <span className="text-[var(--text)]/20 text-xs uppercase tracking-[0.2em] ml-2">{plan.period}</span>}
+                </div>
               </div>
+
               <ul className="space-y-5 mb-12 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-4 text-sm text-[var(--text)]/70">
-                    <Check className="w-5 h-5 text-[var(--accent)] shrink-0" />
+                    <Check className="w-5 h-5 text-[var(--text)]/20 shrink-0" />
                     <span className="font-light">{feature}</span>
                   </li>
                 ))}
               </ul>
+
               <button 
                 onClick={() => handleAction(plan)}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-xs font-bold transition-all ${
-                  plan.highlight ? 'bg-[var(--accent)] text-[var(--bg)]' : 'bg-[var(--text)]/5 text-[var(--text)] border border-[var(--text)]/10'
+                  plan.highlight 
+                    ? 'bg-[var(--accent)] text-[var(--bg)] hover:shadow-2xl' 
+                    : 'bg-transparent text-[var(--text)] border border-[var(--text)]/10 hover:bg-[var(--text)]/5'
                 }`}
               >
                 {plan.buttonText}
