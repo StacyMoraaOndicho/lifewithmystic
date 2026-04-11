@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Star, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight, AlertCircle } from 'lucide-react';
+import { Check, Star, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -56,12 +56,13 @@ function PricingContent() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // AUTO-TRIGGER: Open payment options if they just confirmed email
+  // Aggressive Auto-Trigger for Payment Popup
   useEffect(() => {
-    if (searchParams.get('status') === 'confirmed' && user) {
+    const status = searchParams.get('status');
+    if (status === 'confirmed') {
       setShowPaymentOptions(true);
     }
-  }, [searchParams, user]);
+  }, [searchParams]);
 
   const handleAction = async (plan: any) => {
     if (plan.action === 'signup') {
@@ -124,7 +125,7 @@ function PricingContent() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.2 }}
-              className={`relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col`}
+              className={`relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col shadow-2xl`}
             >
               {plan.highlight && (
                 <div 
@@ -183,12 +184,7 @@ function PricingContent() {
                 <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
                 <div className="space-y-4">
                   {paymentMethods.map((method) => (
-                    <button 
-                      key={method.id} 
-                      onClick={() => handlePaymentMethod(method.id)} 
-                      disabled={!!loading} 
-                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group"
-                    >
+                    <button key={method.id} onClick={() => handlePaymentMethod(method.id)} disabled={!!loading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group">
                       <div className="flex items-center gap-5">
                         <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div className="text-left">
