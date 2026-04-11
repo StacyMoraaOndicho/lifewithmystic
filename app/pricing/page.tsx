@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Star, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight } from 'lucide-react';
+import { Check, Star, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -56,7 +56,7 @@ function PricingContent() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // AUTO-TRIGGER PAYMENT: This is the "Paystack Part" you requested
+  // AUTO-TRIGGER PAYMENT: The "Paystack Part"
   useEffect(() => {
     const status = searchParams.get('status');
     if (status === 'confirmed' && user) {
@@ -93,7 +93,7 @@ function PricingContent() {
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        setShowPaymentOptions(true); // Open options if auto-redirect fails
+        setShowPaymentOptions(true);
         setErrorMessage(data.error || 'Gateway initialization failed.');
       }
     } catch (err) {
@@ -155,7 +155,7 @@ function PricingContent() {
               <ul className="space-y-6 mb-12 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-4 text-sm text-white/60">
-                    <Check className="w-4 h-4 text-white/20 mt-0.5" />
+                    <Check className="w-4 h-4 text-[var(--accent)] shrink-0" />
                     <span className="font-light">{feature}</span>
                   </li>
                 ))}
@@ -190,12 +190,7 @@ function PricingContent() {
                 <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
                 <div className="space-y-4">
                   {paymentMethods.map((method) => (
-                    <button 
-                      key={method.id} 
-                      onClick={() => handlePaymentMethod(method.id)} 
-                      disabled={!!loading} 
-                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group"
-                    >
+                    <button key={method.id} onClick={() => handlePaymentMethod(method.id)} disabled={!!loading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group">
                       <div className="flex items-center gap-5">
                         <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div className="text-left">
@@ -203,11 +198,16 @@ function PricingContent() {
                           <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{method.tag}</p>
                         </div>
                       </div>
-                      {loading === method.id ? <Loader2 className="w-4 h-4 animate-spin text-white/20" /> : <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-white transition-all" />}
+                      <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-white transition-all" />
                     </button>
                   ))}
                 </div>
-                {errorMessage && <p className="mt-8 text-[10px] uppercase font-bold tracking-widest text-red-500">{errorMessage}</p>}
+                {errorMessage && (
+                  <div className="mt-8 flex items-center justify-center gap-2 text-red-500">
+                    <AlertCircle className="w-4 h-4" />
+                    <p className="text-[10px] uppercase font-bold tracking-widest">{errorMessage}</p>
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}
