@@ -55,16 +55,12 @@ function PricingContent() {
   const [loading, setLoading] = useState<string | null>(null);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isForced, setIsForced] = useState(false);
 
-  // THE IRON GATE: Force Paystack immediately if coming from confirmed email
+  // AUTO-TRIGGER: Open the "Select Gateway" menu if coming from email confirm
   useEffect(() => {
     const status = searchParams.get('status');
-    const force = searchParams.get('force');
-    
-    if (status === 'confirmed' && force === 'true' && user) {
-      setIsForced(true);
-      handlePaymentMethod('auto');
+    if (status === 'confirmed' && user) {
+      setShowPaymentOptions(true);
     }
   }, [searchParams, user]);
 
@@ -97,29 +93,14 @@ function PricingContent() {
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        setIsForced(false);
-        setShowPaymentOptions(true);
-        setErrorMessage(data.error || 'Initialization failed.');
+        setErrorMessage(data.error || 'Gateway initialization failed.');
       }
     } catch (err) {
-      setIsForced(false);
-      setErrorMessage('Sanctuary connection lost.');
+      setErrorMessage('Connection error.');
     } finally {
       setLoading(null);
     }
   };
-
-  if (isForced) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
-        <div className="text-center">
-          <Loader2 className="w-16 h-16 animate-spin mx-auto mb-8 text-[var(--accent)]" />
-          <h2 className="text-3xl font-light uppercase tracking-[0.4em] mb-4">Initializing Payment</h2>
-          <p className="text-white/40 italic text-sm">Securing your spot in the sanctuary via Paystack...</p>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen py-24 px-6 bg-[var(--bg)] transition-colors duration-500">
@@ -148,7 +129,7 @@ function PricingContent() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.2 }}
-              className="relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col shadow-2xl"
+              className={`relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col shadow-2xl`}
             >
               {plan.highlight && (
                 <div 
@@ -207,7 +188,12 @@ function PricingContent() {
                 <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
                 <div className="space-y-4 text-left">
                   {paymentMethods.map((method) => (
-                    <button key={method.id} onClick={() => handlePaymentMethod(method.id)} disabled={!!loading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 transition-all flex items-center justify-between group">
+                    <button 
+                      key={method.id} 
+                      onClick={() => handlePaymentMethod(method.id)} 
+                      disabled={!!loading} 
+                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group"
+                    >
                       <div className="flex items-center gap-5">
                         <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div>
@@ -215,7 +201,7 @@ function PricingContent() {
                           <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{method.tag}</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-white transition-all" />
+                      {loading === method.id ? <Loader2 className="w-4 h-4 animate-spin text-white/20" /> : <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-white transition-all" />}
                     </button>
                   ))}
                 </div>
