@@ -70,11 +70,10 @@ export default function Nav() {
 
           <div className="hidden md:flex flex-1 items-center max-w-[800px] overflow-hidden relative">
             <div className="flex items-center overflow-x-auto no-scrollbar scroll-smooth h-10 w-full relative">
-              {/* Left Glowing Bar */}
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="h-6 w-[2px] bg-white shrink-0 mr-8 shadow-[0_0_10px_#fff]" 
+                className="h-6 w-[2px] bg-white shrink-0 mr-6 shadow-[0_0_10px_#fff]" 
               />
               
               <div className="flex items-center gap-10 px-4">
@@ -82,25 +81,24 @@ export default function Nav() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-[11px] whitespace-nowrap font-medium shrink-0 uppercase tracking-[0.2em]"
+                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-[10px] whitespace-nowrap font-medium shrink-0 uppercase tracking-[0.2em]"
                   >
                     {link.label}
                   </Link>
                 ))}
               </div>
 
-              {/* Right Glowing Bar */}
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                className="h-6 w-[2px] bg-white shrink-0 ml-8 shadow-[0_0_10px_#fff]" 
+                className="h-6 w-[2px] bg-white shrink-0 ml-6 shadow-[0_0_10px_#fff]" 
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4 md:gap-6 shrink-0 ml-12">
-            {/* ADMIN BUTTON - Always visible and clean */}
-            <Link href="/admin" className="hidden lg:block px-3 py-1 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-all uppercase tracking-widest text-[10px] opacity-40 hover:opacity-100">
+            {/* ADMIN BUTTON - Restored exactly where it was */}
+            <Link href="/admin" className="hidden lg:block px-2 py-1 text-[9px] border border-current opacity-20 hover:opacity-100 rounded transition-all uppercase tracking-widest">
               Admin
             </Link>
 
@@ -108,13 +106,13 @@ export default function Nav() {
               {user ? (
                 <div className="flex items-center gap-3">
                   {(isWriter || isAdmin) && (
-                    <Link href="/writer/dashboard" className="px-4 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] uppercase tracking-widest font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all">
+                    <Link href="/writer/dashboard" className="px-3 py-1.5 text-[9px] bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent)]/20 transition-all uppercase tracking-widest font-bold">
                       Dashboard
                     </Link>
                   )}
                   <button 
                     onClick={() => signOut()}
-                    className="px-3 py-1.5 text-[10px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
+                    className="px-3 py-1.5 text-[9px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
                   >
                     Logout
                   </button>
