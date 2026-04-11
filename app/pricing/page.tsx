@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Star, Zap, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight, AlertCircle } from 'lucide-react';
+import { Check, Star, PenTool, Loader2, Smartphone, Globe, CreditCard, X, ChevronRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 
@@ -152,15 +152,18 @@ export default function PricingPage() {
             >
               {plan.highlight && (
                 <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
                   animate={{ 
+                    opacity: 1, 
+                    y: 0,
                     boxShadow: [
                       "0 0 10px rgba(var(--accent-rgb), 0.3)",
-                      "0 0 30px rgba(var(--accent-rgb), 0.8)",
+                      "0 0 25px rgba(var(--accent-rgb), 0.6)",
                       "0 0 10px rgba(var(--accent-rgb), 0.3)"
                     ]
                   }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-8 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full z-10"
+                  className="absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full z-10"
                 >
                   Most Chosen
                 </motion.div>
@@ -193,7 +196,7 @@ export default function PricingPage() {
                 onClick={() => handleAction(plan)}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-xs font-bold transition-all ${
                   plan.highlight 
-                    ? 'bg-[var(--accent)] text-[var(--bg)] hover:shadow-2xl' 
+                    ? 'bg-[var(--accent)] text-[var(--bg)] hover:shadow-2xl hover:scale-[1.01]' 
                     : 'bg-transparent text-[var(--text)] border border-[var(--text)]/10 hover:bg-[var(--text)]/5'
                 }`}
               >
@@ -214,7 +217,7 @@ export default function PricingPage() {
               <motion.div 
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
-                className="bg-[#0a0a0a] border border-white/10 w-full max-w-lg rounded-[40px] p-10 relative"
+                className="bg-[#0a0a0a] border border-white/10 w-full max-w-lg rounded-[40px] p-10 relative shadow-2xl"
               >
                 <button onClick={() => setShowPaymentOptions(false)} className="absolute top-8 right-8 p-2 text-white/20 hover:text-white"><X /></button>
 
@@ -232,9 +235,7 @@ export default function PricingPage() {
                       className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-white/[0.05] transition-all flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-5">
-                        <div className="p-3 rounded-2xl bg-white/5 group-hover:scale-110 transition-transform">
-                          {method.icon}
-                        </div>
+                        <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div className="text-left">
                           <h4 className="text-white font-medium">{method.name}</h4>
                           <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{method.tag}</p>
