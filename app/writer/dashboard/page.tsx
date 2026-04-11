@@ -45,11 +45,22 @@ function DashboardContent() {
   useEffect(() => {
     if (user) {
       const isComingFromPayment = searchParams.get('status') === 'success';
-      checkSubscriptionAndFetchData(isComingFromPayment);
+      if (isComingFromPayment) {
+        setIsVerifying(true);
+        // Wait 4 seconds for webhook to complete
+        setTimeout(() => {
+          checkSubscriptionAndFetchData(false);
+          setShowSuccess(true);
+          // Clean the URL
+          window.history.replaceState({}, '', '/writer/dashboard');
+        }, 4000);
+      } else {
+        checkSubscriptionAndFetchData(false);
+      }
     }
   }, [user]);
 
-  async function checkSubscriptionAndFetchData(retry = false) {
+  async function checkSubscriptionAndFetchData(redirectOnFail = true) {
     try {
       const { data: profileData, error: profileErr } = await supabase
         .from('profiles')
@@ -59,38 +70,26 @@ function DashboardContent() {
       
       if (profileErr) throw profileErr;
 
-      // GRACEFUL VERIFICATION: If the webhook is slow, wait and try one more time
-      if (profileData?.subscription_status !== 'active' && retry) {
-        setIsVerifying(true);
-        // Wait 3 seconds for the webhook to catch up
-        await new Promise(resolve => setTimeout(resolve, 3500));
-        return checkSubscriptionAndFetchData(false); // Try once more without retry
-      }
-
-      // If STILL not active after retry, then redirect
-      if (profileData?.subscription_status !== 'active') {
+      // Logic: If not active and we AREN'T currently waiting for a webhook, redirect.
+      if (profileData?.subscription_status !== 'active' && redirectOnFail) {
         router.push('/pricing');
         return;
       }
 
-      // If active, proceed normally
-      setProfile(profileData);
-      setIsVerifying(false);
-      
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('*')
-        .eq('writer_id', user?.id);
-      
-      if (productsData) setProducts(productsData);
-      
-      if (searchParams.get('status') === 'success') {
-        setShowSuccess(true);
+      // If they are active, load the rest
+      if (profileData?.subscription_status === 'active') {
+        setProfile(profileData);
+        const { data: productsData } = await supabase
+          .from('products')
+          .select('*')
+          .eq('writer_id', user?.id);
+        if (productsData) setProducts(productsData);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Dashboard Error:', err);
     } finally {
       setLoading(false);
+      setIsVerifying(false);
     }
   }
 
@@ -108,7 +107,6 @@ function DashboardContent() {
   return (
     <main className="min-h-screen p-6 md:p-12 bg-[var(--bg)] transition-colors duration-500">
       <div className="max-w-6xl mx-auto pt-16">
-        
         <AnimatePresence>
           {showSuccess && (
             <motion.div 
@@ -142,7 +140,7 @@ function DashboardContent() {
           </div>
           <div className="flex gap-4">
             <Link href="/studio">
-              <button className="px-6 py-3 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 shadow-lg transition-all hover:scale-[1.02]">
+              <button className="px-6 py-3 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 shadow-lg">
                 <PenTool className="w-4 h-4" /> New Essay
               </button>
             </Link>
@@ -164,39 +162,6 @@ function DashboardContent() {
               <div className="text-3xl font-light text-[var(--text)]">{stat.value}</div>
             </div>
           ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-8">
-            <section>
-              <div className="flex items-center justify-between mb-8 px-4">
-                <div className="flex items-center gap-3">
-                  <Plus className="w-5 h-5 text-[var(--accent)]" />
-                  <h2 className="text-xl font-light text-[var(--text)] uppercase tracking-widest">Digital Products</h2>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {products.map((product) => (
-                  <div key={product.id} className="p-8 rounded-[32px] border border-[var(--text)]/10 bg-[var(--text)]/[0.02] flex items-center justify-between">
-                    <div>
-                      <div className="text-[9px] text-[var(--accent)] uppercase font-bold tracking-widest mb-1">{product.type}</div>
-                      <h3 className="text-base font-light text-[var(--text)] mb-1">{product.title}</h3>
-                      <div className="text-xl font-light text-[var(--text)]/60">{product.price}</div>
-                    </div>
-                    <LinkIcon className="w-4 h-4 text-[var(--text)]/20" />
-                  </div>
-                ))}
-                
-                <Link href="/writer/settings" className="block">
-                  <button className="w-full h-full p-8 rounded-[32px] border-2 border-dashed border-[var(--text)]/10 text-[var(--text)]/20 hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all flex flex-col items-center justify-center gap-3">
-                    <Plus className="w-8 h-8" />
-                    <span className="text-[10px] uppercase tracking-[0.3em] font-bold">New Offering</span>
-                  </button>
-                </Link>
-              </div>
-            </section>
-          </div>
         </div>
       </div>
     </main>
