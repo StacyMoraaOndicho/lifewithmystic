@@ -64,25 +64,25 @@ export default function Nav() {
       >
         <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between h-12 md:h-16">
           
-          <Link href="/" className="text-base md:text-lg font-light tracking-[0.3em] uppercase whitespace-nowrap shrink-0 mr-12">
+          <Link href="/" className="text-base md:text-lg font-light tracking-[0.2em] uppercase whitespace-nowrap shrink-0 mr-12">
             lifewithmystic
           </Link>
 
-          <div className="hidden md:flex flex-1 items-center max-w-[600px] lg:max-w-[900px] overflow-hidden relative">
+          <div className="hidden md:flex flex-1 items-center max-w-[800px] overflow-hidden relative">
             <div className="flex items-center overflow-x-auto no-scrollbar scroll-smooth h-10 w-full relative">
               {/* Left Glowing Bar */}
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="h-6 w-[2px] bg-white shrink-0 mr-10 shadow-[0_0_10px_#fff]" 
+                className="h-6 w-[2px] bg-white shrink-0 mr-8 shadow-[0_0_10px_#fff]" 
               />
               
-              <div className="flex items-center gap-14 lg:gap-20 px-4">
+              <div className="flex items-center gap-10 px-4">
                 {navLinks.map(link => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-[9px] lg:text-[10px] whitespace-nowrap font-bold shrink-0 uppercase tracking-[0.3em]"
+                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-[11px] whitespace-nowrap font-medium shrink-0 uppercase tracking-[0.2em]"
                   >
                     {link.label}
                   </Link>
@@ -93,36 +93,35 @@ export default function Nav() {
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                className="h-6 w-[2px] bg-white shrink-0 ml-10 shadow-[0_0_10px_#fff]" 
+                className="h-6 w-[2px] bg-white shrink-0 ml-8 shadow-[0_0_10px_#fff]" 
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4 md:gap-6 shrink-0 ml-12">
-            {isAdmin && (
-              <Link href="/admin" className="hidden lg:block px-2.5 py-1 text-[9px] border border-white/20 text-white rounded hover:bg-white/10 transition-all uppercase tracking-widest opacity-40 hover:opacity-100">
-                Admin
-              </Link>
-            )}
+            {/* ADMIN BUTTON - Always visible and clean */}
+            <Link href="/admin" className="hidden lg:block px-3 py-1 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-all uppercase tracking-widest text-[10px] opacity-40 hover:opacity-100">
+              Admin
+            </Link>
 
             <div className="flex items-center gap-4">
               {user ? (
                 <div className="flex items-center gap-3">
                   {(isWriter || isAdmin) && (
-                    <Link href="/writer/dashboard" className="px-3 py-1.5 text-[9px] bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent)]/20 transition-all uppercase tracking-widest font-bold">
+                    <Link href="/writer/dashboard" className="px-4 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] uppercase tracking-widest font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all">
                       Dashboard
                     </Link>
                   )}
                   <button 
                     onClick={() => signOut()}
-                    className="px-3 py-1.5 text-[9px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
+                    className="px-3 py-1.5 text-[10px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
                   >
                     Logout
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Link href="/login" className="text-[10px] opacity-60 hover:opacity-100 transition-all uppercase tracking-widest">
+                  <Link href="/login" className="text-xs opacity-60 hover:opacity-100 transition-all uppercase tracking-widest">
                     Login
                   </Link>
                   
@@ -167,8 +166,8 @@ export default function Nav() {
             className="fixed top-14 left-0 right-0 z-40 md:hidden border-b border-opacity-10 shadow-2xl"
           >
             <div className="max-w-6xl mx-auto px-4 py-6 space-y-4 text-center">
-              {isAdmin && <Link href="/admin" onClick={() => setMobileOpen(false)} className="block py-3 text-white/40 font-bold uppercase tracking-widest">Admin Panel</Link>}
-              {(isWriter || isAdmin) && <Link href="/writer/dashboard" onClick={() => setMobileOpen(false)} className="block py-3 text-[var(--accent)] font-bold uppercase tracking-widest">Writer Dashboard</Link>}
+              <Link href="/admin" onClick={() => setMobileOpen(false)} className="block py-3 text-white/40 font-bold uppercase tracking-widest border-b border-white/5">Admin Panel</Link>
+              {(isWriter || isAdmin) && <Link href="/writer/dashboard" onClick={() => setMobileOpen(false)} className="block py-3 text-[var(--accent)] font-bold uppercase tracking-widest border-b border-white/5">Writer Dashboard</Link>}
               {navLinks.map(link => (
                 <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className="block py-2 opacity-70 hover:opacity-100 text-lg font-light uppercase tracking-widest">{link.label}</Link>
               ))}
