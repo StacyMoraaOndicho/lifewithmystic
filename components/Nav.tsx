@@ -70,6 +70,13 @@ export default function Nav() {
 
           <div className="hidden md:flex flex-1 items-center max-w-[600px] lg:max-w-[900px] overflow-hidden relative">
             <div className="flex items-center overflow-x-auto no-scrollbar scroll-smooth h-10 w-full relative">
+              {/* Left Glowing Bar */}
+              <motion.div 
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="h-6 w-[2px] bg-white shrink-0 mr-6 shadow-[0_0_10px_#fff]" 
+              />
+              
               <div className="flex items-center gap-10 lg:gap-14 px-2">
                 {navLinks.map(link => (
                   <Link
@@ -81,12 +88,19 @@ export default function Nav() {
                   </Link>
                 ))}
               </div>
+
+              {/* Right Glowing Bar */}
+              <motion.div 
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                className="h-6 w-[2px] bg-white shrink-0 ml-6 shadow-[0_0_10px_#fff]" 
+              />
             </div>
           </div>
 
           <div className="flex items-center gap-4 md:gap-6 shrink-0 ml-12">
             {isAdmin && (
-              <Link href="/admin" className="hidden lg:block px-2 py-1 text-[9px] border border-amber-500/30 text-amber-500 rounded transition-all uppercase tracking-widest hover:bg-amber-500/10">
+              <Link href="/admin" className="hidden lg:block px-2.5 py-1 text-[9px] border border-white/20 text-white rounded hover:bg-white/10 transition-all uppercase tracking-widest opacity-40 hover:opacity-100">
                 Admin
               </Link>
             )}
@@ -153,10 +167,10 @@ export default function Nav() {
             className="fixed top-14 left-0 right-0 z-40 md:hidden border-b border-opacity-10 shadow-2xl"
           >
             <div className="max-w-6xl mx-auto px-4 py-6 space-y-4 text-center">
-              {isAdmin && <Link href="/admin" onClick={() => setMobileOpen(false)} className="block py-3 text-amber-500 font-bold uppercase tracking-widest">Admin Panel</Link>}
+              {isAdmin && <Link href="/admin" onClick={() => setMobileOpen(false)} className="block py-3 text-white/40 font-bold uppercase tracking-widest">Admin Panel</Link>}
               {(isWriter || isAdmin) && <Link href="/writer/dashboard" onClick={() => setMobileOpen(false)} className="block py-3 text-[var(--accent)] font-bold uppercase tracking-widest">Writer Dashboard</Link>}
               {navLinks.map(link => (
-                <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className="block py-2 opacity-70 hover:opacity-100 text-lg font-light">{link.label}</Link>
+                <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className="block py-2 opacity-70 hover:opacity-100 text-lg font-light uppercase tracking-widest">{link.label}</Link>
               ))}
               <div className="pt-4 border-t border-current border-opacity-10 flex flex-col gap-3">
                 {user ? <button onClick={() => { signOut(); setMobileOpen(false); }} className="w-full py-3 border border-current border-opacity-20 rounded-xl uppercase tracking-widest text-sm">Logout</button> : (
