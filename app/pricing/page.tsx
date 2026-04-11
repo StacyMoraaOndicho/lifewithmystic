@@ -55,47 +55,18 @@ function PricingContent() {
   const [loading, setLoading] = useState<string | null>(null);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isAutoRedirecting, setIsAutoRedirecting] = useState(false);
+  const [isForced, setIsForced] = useState(false);
 
-  // CRITICAL: MANDATORY AUTO-REDIRECT TO PAYSTACK
+  // THE IRON GATE: Force Paystack immediately if coming from confirmed email
   useEffect(() => {
     const status = searchParams.get('status');
-    const plan = searchParams.get('plan');
+    const force = searchParams.get('force');
     
-    if (status === 'confirmed' && plan === 'writer' && user) {
-      handleAutoRedirect();
+    if (status === 'confirmed' && force === 'true' && user) {
+      setIsForced(true);
+      handlePaymentMethod('auto');
     }
   }, [searchParams, user]);
-
-  const handleAutoRedirect = async () => {
-    setIsAutoRedirecting(true);
-    setLoading('auto');
-    try {
-      const res = await fetch('/api/paystack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user?.id, 
-          userEmail: user?.email,
-          amount: 9 
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url; // This takes them to the Paystack checkout screen
-      } else {
-        setIsAutoRedirecting(false);
-        setShowPaymentOptions(true);
-        setErrorMessage(data.error || 'Auto-initialization failed. Please select a method manually.');
-      }
-    } catch (err) {
-      setIsAutoRedirecting(false);
-      setShowPaymentOptions(true);
-      setErrorMessage('Could not reach the payment sanctuary.');
-    } finally {
-      setLoading(null);
-    }
-  };
 
   const handleAction = async (plan: any) => {
     if (plan.action === 'signup') {
@@ -116,28 +87,35 @@ function PricingContent() {
       const res = await fetch('/api/paystack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, userEmail: user?.email, amount: 9 }),
+        body: JSON.stringify({ 
+          userId: user?.id, 
+          userEmail: user?.email,
+          amount: 9 
+        }),
       });
       const data = await res.json();
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        setErrorMessage(data.error || 'Gateway unavailable.');
+        setIsForced(false);
+        setShowPaymentOptions(true);
+        setErrorMessage(data.error || 'Initialization failed.');
       }
     } catch (err) {
-      setErrorMessage('Connection error.');
+      setIsForced(false);
+      setErrorMessage('Sanctuary connection lost.');
     } finally {
       setLoading(null);
     }
   };
 
-  if (isAutoRedirecting) {
+  if (isForced) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-6 text-[var(--accent)]" />
-          <h2 className="text-2xl font-light uppercase tracking-[0.3em] mb-2">Initiating Payment</h2>
-          <p className="text-white/40 italic text-sm">Transferring you to the secure Paystack sanctuary...</p>
+          <Loader2 className="w-16 h-16 animate-spin mx-auto mb-8 text-[var(--accent)]" />
+          <h2 className="text-3xl font-light uppercase tracking-[0.4em] mb-4">Initializing Payment</h2>
+          <p className="text-white/40 italic text-sm">Securing your spot in the sanctuary via Paystack...</p>
         </div>
       </main>
     );
@@ -170,7 +148,7 @@ function PricingContent() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.2 }}
-              className={`relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col shadow-2xl`}
+              className="relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col shadow-2xl"
             >
               {plan.highlight && (
                 <div 
@@ -203,14 +181,13 @@ function PricingContent() {
 
               <button 
                 onClick={() => handleAction(plan)}
-                disabled={!!loading}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-[10px] font-bold transition-all ${
                   plan.highlight 
                     ? 'bg-white text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
                     : 'bg-transparent text-white border border-white/10 hover:bg-white/5'
                 }`}
               >
-                {loading && plan.name === 'Writer' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : plan.buttonText}
+                {plan.buttonText}
               </button>
             </motion.div>
           ))}
@@ -259,7 +236,7 @@ function PricingContent() {
 
 export default function PricingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono text-[10px] uppercase tracking-[0.5em]">Syncing Sanctuary...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono text-[10px] uppercase tracking-[0.5em]">Initializing Gateway...</div>}>
       <PricingContent />
     </Suspense>
   );
