@@ -146,27 +146,20 @@ export default function PricingPage() {
               transition={{ delay: idx * 0.2 }}
               className={`relative p-10 rounded-[40px] border ${
                 plan.highlight 
-                  ? 'border-[var(--accent)] bg-[var(--accent)]/[0.03] shadow-[0_0_40px_-15px_rgba(var(--accent-rgb),0.3)]' 
+                  ? 'border-[var(--accent)] bg-[var(--accent)]/[0.03] shadow-[0_0_40px_-15px_rgba(var(--accent-rgb),0.2)]' 
                   : 'border-[var(--text)]/10 bg-[var(--text)]/[0.02]'
               } flex flex-col`}
             >
               {plan.highlight && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0,
-                    boxShadow: [
-                      "0 0 10px rgba(var(--accent-rgb), 0.3)",
-                      "0 0 25px rgba(var(--accent-rgb), 0.6)",
-                      "0 0 10px rgba(var(--accent-rgb), 0.3)"
-                    ]
+                <div 
+                  style={{ 
+                    boxShadow: "0 0 20px rgba(var(--accent-rgb), 0.8), 0 0 40px rgba(var(--accent-rgb), 0.4)",
+                    filter: "drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.5))"
                   }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full z-10"
+                  className="absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full z-10 whitespace-nowrap border border-white/20"
                 >
                   Most Chosen
-                </motion.div>
+                </div>
               )}
 
               <div className="mb-8">
@@ -196,7 +189,7 @@ export default function PricingPage() {
                 onClick={() => handleAction(plan)}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-xs font-bold transition-all ${
                   plan.highlight 
-                    ? 'bg-[var(--accent)] text-[var(--bg)] hover:shadow-2xl hover:scale-[1.01]' 
+                    ? 'bg-[var(--accent)] text-[var(--bg)] hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)]' 
                     : 'bg-transparent text-[var(--text)] border border-[var(--text)]/10 hover:bg-[var(--text)]/5'
                 }`}
               >
