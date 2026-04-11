@@ -20,10 +20,8 @@ function SignupContent() {
     setLoading(true);
     setMessage('');
 
-    // FORCE REDIRECT FOR WRITERS: This ensures the email link goes to /pricing
-    const redirectTo = plan === 'writer' 
-      ? `${window.location.origin}/auth/callback?next=/pricing` 
-      : `${window.location.origin}/auth/callback?next=/blog`;
+    // FORCE REDIRECT: Ensure writers go to pricing with the "confirmed" status
+    const redirectTo = `${window.location.origin}/auth/callback?next=${plan === 'writer' ? '/pricing' : '/blog'}`;
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -38,9 +36,6 @@ function SignupContent() {
       setMessage(`Error: ${error.message}`);
     } else {
       setMessage('Check your email for the confirmation link!');
-      if (data.user && data.session) {
-        router.push(plan === 'writer' ? '/pricing' : '/blog');
-      }
     }
     setLoading(false);
   };
@@ -54,57 +49,35 @@ function SignupContent() {
       >
         <div className="text-center mb-10">
           <h1 className="text-4xl font-light tracking-tight text-[var(--text)] mb-2">Join the Mystery</h1>
-          <p className="text-[var(--text)]/40 italic">Create an account to like and reflect on essays.</p>
+          <p className="text-[var(--text)]/40 italic text-sm">Create an account to like and reflect on essays.</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-6">
           <div>
             <label className="block text-xs uppercase tracking-widest text-[var(--text)]/60 mb-2 font-mono">Email Address</label>
             <input 
-              type="email" 
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
               className="w-full p-4 rounded-xl bg-[var(--text)]/5 border border-[var(--text)]/10 text-[var(--text)] focus:outline-none focus:border-[var(--accent)]/50 transition-all"
               placeholder="you@example.com"
             />
           </div>
-
           <div>
             <label className="block text-xs uppercase tracking-widest text-[var(--text)]/60 mb-2 font-mono">Password</label>
             <input 
-              type="password" 
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
               className="w-full p-4 rounded-xl bg-[var(--text)]/5 border border-[var(--text)]/10 text-[var(--text)] focus:outline-none focus:border-[var(--accent)]/50 transition-all"
               placeholder="••••••••"
             />
           </div>
-
-          <button 
-            type="submit"
-            disabled={loading}
-            className="w-full p-4 rounded-xl border border-[var(--text)]/20 hover:bg-[var(--text)]/5 transition-all font-semibold uppercase tracking-[0.2em] text-sm disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className="w-full p-4 rounded-xl border border-[var(--text)]/20 hover:bg-[var(--text)]/5 transition-all font-semibold uppercase tracking-[0.2em] text-sm disabled:opacity-50">
             {loading ? 'Initiating...' : 'Sign Up'}
           </button>
         </form>
 
-        {message && (
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-6 text-center text-sm text-[var(--text)]/60"
-          >
-            {message}
-          </motion.p>
-        )}
+        {message && <p className="mt-6 text-center text-sm text-[var(--text)]/60 italic">{message}</p>}
 
         <div className="mt-10 pt-6 border-t border-[var(--text)]/5 text-center">
-          <p className="text-sm text-[var(--text)]/40">
-            Already a member? <Link href="/login" className="text-[var(--text)] hover:underline">Login here</Link>
-          </p>
+          <p className="text-sm text-[var(--text)]/40">Already a member? <Link href="/login" className="text-[var(--text)] hover:underline">Login here</Link></p>
         </div>
       </motion.div>
     </main>
