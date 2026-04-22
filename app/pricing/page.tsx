@@ -55,13 +55,20 @@ function PricingContent() {
   const [loading, setLoading] = useState<string | null>(null);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAutoInitializing, setIsAutoInitializing] = useState(false);
 
-  // FORCE POPUP: Always show for writers coming from email OR forced redirect
+  // THE IRON GATE: Open payment selection automatically if writer confirm link is detected
   useEffect(() => {
     const status = searchParams.get('status');
-    const force = searchParams.get('force_gateway');
-    if ((status === 'confirmed' || force === 'true') && user) {
-      setShowPaymentOptions(true);
+    const forceGateway = searchParams.get('force_gateway');
+    
+    if (status === 'confirmed' || forceGateway === 'true') {
+      setIsAutoInitializing(true);
+      // Wait for user to be available, then show popup
+      if (user) {
+        setShowPaymentOptions(true);
+        setIsAutoInitializing(false);
+      }
     }
   }, [searchParams, user]);
 
@@ -84,24 +91,32 @@ function PricingContent() {
       const res = await fetch('/api/paystack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user?.id, 
-          userEmail: user?.email,
-          amount: 9 
-        }),
+        body: JSON.stringify({ userId: user?.id, userEmail: user?.email, amount: 9 }),
       });
       const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url; // GO TO PAYSTACK
+      if (data.url) {
+        window.location.href = data.url;
       } else {
         setErrorMessage(data.error || 'Gateway initialization failed.');
       }
     } catch (err) {
-      setErrorMessage('Connection to Paystack sanctuary lost.');
+      setErrorMessage('Connection error.');
     } finally {
       setLoading(null);
     }
   };
+
+  if (isAutoInitializing) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-6 text-[var(--accent)]" />
+          <h2 className="text-2xl font-light uppercase tracking-[0.3em] mb-2">Syncing Sanctuary Access</h2>
+          <p className="text-white/40 italic text-sm">Preparing the payment gateway for your arrival...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen py-24 px-6 bg-[var(--bg)] transition-colors duration-500">
@@ -114,11 +129,7 @@ function PricingContent() {
           >
             Choose your <span className="italic font-serif text-[var(--accent)]">Path</span>
           </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-white/40 text-sm italic max-w-xl mx-auto leading-relaxed"
-          >
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white/40 text-sm italic max-w-xl mx-auto leading-relaxed">
             Whether you are here to absorb the light or to radiate your own wisdom, there is a place for you.
           </motion.p>
         </div>
@@ -133,13 +144,10 @@ function PricingContent() {
               className={`relative p-12 rounded-[40px] border border-white/5 bg-white/[0.01] flex flex-col shadow-2xl`}
             >
               {plan.highlight && (
-                <div 
-                  className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 glass rounded-lg shadow-[0_0_20px_rgba(var(--accent-rgb),0.4)] z-20 border border-white/20"
-                >
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 glass rounded-lg shadow-[0_0_20px_rgba(var(--accent-rgb),0.4)] z-20 border border-white/20">
                   <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white">Most Chosen</span>
                 </div>
               )}
-
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-4">
                   <h3 className="text-2xl font-light text-white uppercase tracking-[0.2em]">{plan.name}</h3>
@@ -151,16 +159,14 @@ function PricingContent() {
                   {plan.period && <span className="text-white/20 text-xs uppercase tracking-widest ml-2">{plan.period}</span>}
                 </div>
               </div>
-
               <ul className="space-y-6 mb-12 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-4 text-sm text-white/60">
-                    <Check className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-white/20 mt-0.5" />
                     <span className="font-light">{feature}</span>
                   </li>
                 ))}
               </ul>
-
               <button 
                 onClick={() => handleAction(plan)}
                 className={`w-full py-5 rounded-2xl text-center uppercase tracking-[0.3em] text-[10px] font-bold transition-all ${
@@ -177,24 +183,14 @@ function PricingContent() {
 
         <AnimatePresence>
           {showPaymentOptions && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
               <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-[#0a0a0a] border border-white/10 w-full max-w-lg rounded-[40px] p-12 relative shadow-3xl text-center">
                 <button onClick={() => setShowPaymentOptions(false)} className="absolute top-10 right-10 p-2 text-white/20 hover:text-white"><X className="w-6 h-6" /></button>
                 <h2 className="text-3xl font-light text-white mb-2 uppercase tracking-[0.2em]">Select Gateway</h2>
                 <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Kenya & Africa Optimized</p>
                 <div className="space-y-4 text-left">
                   {paymentMethods.map((method) => (
-                    <button 
-                      key={method.id} 
-                      onClick={() => handlePaymentMethod(method.id)} 
-                      disabled={!!loading} 
-                      className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group"
-                    >
+                    <button key={method.id} onClick={() => handlePaymentMethod(method.id)} disabled={!!loading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group">
                       <div className="flex items-center gap-5">
                         <div className="p-3 rounded-2xl bg-white/5">{method.icon}</div>
                         <div>
