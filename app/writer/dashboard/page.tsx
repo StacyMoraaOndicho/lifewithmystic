@@ -15,6 +15,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 type Product = { id: string; title: string; type: string; price: string; link: string; };
 
+const ADMIN_EMAIL = "lifewithmystic@gmail.com";
+
+// FIXED: Moved variable to the top to prevent build error
+const paymentMethods = [
+  { id: 'mpesa', name: 'M-Pesa / Mobile Money', icon: <Smartphone className="w-5 h-5 text-emerald-500" />, tag: 'Kenya Special' },
+  { id: 'card', name: 'Credit / Debit Card', icon: <Globe className="w-5 h-5 text-blue-400" />, tag: 'Africa & Global' },
+  { id: 'bank', name: 'Bank Transfer (Pesalink)', icon: <CreditCard className="w-5 h-5 text-yellow-500" />, tag: 'Direct' }
+];
+
 function DashboardContent() {
   const { user } = useAuth();
   const router = useRouter();
@@ -35,11 +44,11 @@ function DashboardContent() {
   async function checkSubscriptionAndFetchData() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user?.id).maybeSingle();
     
-    // TEMPORARY: REMOVED ADMIN BYPASS FOR TESTING
-    // Even lifewithmystic@gmail.com will now be asked to pay if status is inactive
+    // Check if user is the admin or has paid
+    const isAdmin = user?.email === ADMIN_EMAIL;
     const isActive = profileData?.subscription_status === 'active';
 
-    if (!isActive) {
+    if (!isAdmin && !isActive) {
       setMustPay(true);
       setLoading(false);
       return;
@@ -58,7 +67,11 @@ function DashboardContent() {
       const res = await fetch('/api/paystack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, userEmail: user?.email, amount: 9 }),
+        body: JSON.stringify({ 
+          userId: user?.id, 
+          userEmail: user?.email, 
+          amount: 9 
+        }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -91,21 +104,28 @@ function DashboardContent() {
               </button>
             ))}
           </div>
-          <p className="mt-10 text-[9px] text-white/20 uppercase tracking-[0.3em]">Subscription Required for Creator Tools</p>
+          <p className="mt-10 text-[9px] text-white/20 uppercase tracking-[0.3em]">Monthly subscription: $9 (1,200 KES)</p>
         </motion.div>
       </main>
     );
   }
 
-  const paymentMethods = [
-    { id: 'mpesa', name: 'M-Pesa / Mobile Money', icon: <Smartphone className="w-5 h-5 text-emerald-500" />, tag: 'Kenya Special' },
-    { id: 'card', name: 'Credit / Debit Card', icon: <Globe className="w-5 h-5 text-blue-400" />, tag: 'Africa & Global' },
-    { id: 'bank', name: 'Bank Transfer (Pesalink)', icon: <CreditCard className="w-5 h-5 text-yellow-500" />, tag: 'Direct' }
-  ];
-
   return (
     <main className="min-h-screen p-6 md:p-12 bg-[var(--bg)] transition-colors duration-500">
       <div className="max-w-6xl mx-auto pt-16">
+        
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-12 p-8 rounded-[40px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between shadow-2xl shadow-emerald-500/5">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400"><CheckCircle2 className="w-8 h-8" /></div>
+                <div><h3 className="text-2xl font-light text-white mb-1 uppercase tracking-widest">Presence Activated</h3><p className="text-sm text-white/60 italic">Your voice is now part of the collective sanctuary.</p></div>
+              </div>
+              <button onClick={() => setShowSuccess(false)} className="p-2 text-white/20 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div>
             <motion.h1 className="text-5xl font-light text-white uppercase tracking-[0.2em]">Creator <span className="italic text-[var(--accent)] font-serif">Sanctuary</span></motion.h1>
@@ -117,7 +137,6 @@ function DashboardContent() {
           </div>
         </header>
 
-        {/* STATS SECTION */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {[
             { label: 'Total Readers', value: '1,240', icon: <Users className="w-5 h-5" />, color: 'text-blue-400' },
@@ -127,7 +146,7 @@ function DashboardContent() {
           ].map((stat) => (
             <div key={stat.label} className="p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all group shadow-sm">
               <div className="flex items-center gap-4 mb-6">
-                <div className={`p-2 rounded-lg bg-white/5 ${stat.color} group-hover:scale-110 transition-transform`}>{stat.icon}</div>
+                <div className={`p-2 rounded-lg bg-[var(--text)]/5 ${stat.color} group-hover:scale-110 transition-transform`}>{stat.icon}</div>
                 <span className="text-[10px] uppercase tracking-widest text-white/30 font-bold">{stat.label}</span>
               </div>
               <div className="text-4xl font-light text-white">{stat.value}</div>
@@ -137,7 +156,6 @@ function DashboardContent() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           <div className="lg:col-span-2 space-y-16">
-            {/* DIGITAL PRODUCTS */}
             <section>
               <div className="flex items-center justify-between mb-10 px-4">
                 <div className="flex items-center gap-4"><Plus className="w-5 h-5 text-[var(--accent)]" /><h2 className="text-2xl font-light text-white uppercase tracking-widest">Digital Offerings</h2></div>
@@ -158,7 +176,6 @@ function DashboardContent() {
               </div>
             </section>
 
-            {/* RESONANCE MAP (ANALYTICS) */}
             <section>
               <div className="flex items-center gap-4 mb-10 px-4"><TrendingUp className="w-6 h-6 text-amber-400 opacity-40" /><h2 className="text-2xl font-light text-white uppercase tracking-widest">Resonance Map</h2></div>
               <div className="rounded-[40px] border border-white/10 bg-white/[0.01] overflow-hidden shadow-2xl">
@@ -177,7 +194,7 @@ function DashboardContent() {
           <div className="space-y-12">
             <section className="p-12 rounded-[50px] bg-[var(--accent)] text-[var(--bg)] relative overflow-hidden group shadow-3xl">
               <h3 className="text-3xl font-light mb-6 uppercase tracking-widest leading-tight text-white">Elevate <br/>Presence</h3>
-              <p className="text-white/70 text-sm mb-10 leading-relaxed italic font-light">Your current resonance is up 20% this week. Share your latest reflection to keep the momentum flowing through the collective.</p>
+              <p className="text-[var(--bg)]/70 text-sm mb-10 leading-relaxed italic font-light">Your current resonance is up 20% this week. Share your latest reflection to keep the momentum flowing through the collective.</p>
               <button className="w-full py-5 bg-white text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 hover:shadow-2xl transition-all">Radiate Now</button>
             </section>
             <section className="p-12 rounded-[50px] border border-white/10 bg-white/[0.01] shadow-xl">
@@ -194,7 +211,7 @@ function DashboardContent() {
 export default function WriterDashboard() {
   return (
     <ProtectedRoute>
-      <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Entering Sanctuary...</div>}><DashboardContent /></Suspense>
+      <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px]">Entering Sanctuary...</div>}><DashboardContent /></Suspense>
     </ProtectedRoute>
   );
 }
