@@ -17,7 +17,6 @@ type Product = { id: string; title: string; type: string; price: string; link: s
 
 const ADMIN_EMAIL = "lifewithmystic@gmail.com";
 
-// FIXED: Moved variable to the top to prevent build error
 const paymentMethods = [
   { id: 'mpesa', name: 'M-Pesa / Mobile Money', icon: <Smartphone className="w-5 h-5 text-emerald-500" />, tag: 'Kenya Special' },
   { id: 'card', name: 'Credit / Debit Card', icon: <Globe className="w-5 h-5 text-blue-400" />, tag: 'Africa & Global' },
@@ -48,6 +47,7 @@ function DashboardContent() {
     const isAdmin = user?.email === ADMIN_EMAIL;
     const isActive = profileData?.subscription_status === 'active';
 
+    // FORCE PAYMENT GATE if not admin and not active
     if (!isAdmin && !isActive) {
       setMustPay(true);
       setLoading(false);
@@ -67,11 +67,7 @@ function DashboardContent() {
       const res = await fetch('/api/paystack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user?.id, 
-          userEmail: user?.email, 
-          amount: 9 
-        }),
+        body: JSON.stringify({ userId: user?.id, userEmail: user?.email, amount: 9 }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -82,7 +78,7 @@ function DashboardContent() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">Entering Sanctuary</div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading Sanctuary...</div>;
 
   if (mustPay) {
     return (
@@ -146,7 +142,7 @@ function DashboardContent() {
           ].map((stat) => (
             <div key={stat.label} className="p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all group shadow-sm">
               <div className="flex items-center gap-4 mb-6">
-                <div className={`p-2 rounded-lg bg-[var(--text)]/5 ${stat.color} group-hover:scale-110 transition-transform`}>{stat.icon}</div>
+                <div className={`p-2 rounded-lg bg-white/5 ${stat.color} group-hover:scale-110 transition-transform`}>{stat.icon}</div>
                 <span className="text-[10px] uppercase tracking-widest text-white/30 font-bold">{stat.label}</span>
               </div>
               <div className="text-4xl font-light text-white">{stat.value}</div>
