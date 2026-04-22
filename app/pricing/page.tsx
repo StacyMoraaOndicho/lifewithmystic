@@ -56,10 +56,11 @@ function PricingContent() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // AUTO-TRIGGER: Open the "Select Gateway" menu if coming from email confirm
+  // FORCE POPUP: Always show for writers coming from email OR forced redirect
   useEffect(() => {
     const status = searchParams.get('status');
-    if (status === 'confirmed' && user) {
+    const force = searchParams.get('force_gateway');
+    if ((status === 'confirmed' || force === 'true') && user) {
       setShowPaymentOptions(true);
     }
   }, [searchParams, user]);
@@ -91,12 +92,12 @@ function PricingContent() {
       });
       const data = await res.json();
       if (res.ok && data.url) {
-        window.location.href = data.url;
+        window.location.href = data.url; // GO TO PAYSTACK
       } else {
         setErrorMessage(data.error || 'Gateway initialization failed.');
       }
     } catch (err) {
-      setErrorMessage('Connection error.');
+      setErrorMessage('Connection to Paystack sanctuary lost.');
     } finally {
       setLoading(null);
     }
@@ -146,7 +147,7 @@ function PricingContent() {
                 </div>
                 <p className="text-white/30 text-xs italic mb-8 leading-relaxed">{plan.description}</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-7xl font-light text-white">{plan.price}</span>
+                  <span className="text-7xl font-light text-white">$9</span>
                   {plan.period && <span className="text-white/20 text-xs uppercase tracking-widest ml-2">{plan.period}</span>}
                 </div>
               </div>
