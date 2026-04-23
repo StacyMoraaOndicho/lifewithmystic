@@ -10,18 +10,28 @@ export async function GET(request: Request) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
+    // 1. Exchange the code for a session
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error && data?.user) {
       const user = data.user;
-      const plan = user.user_metadata?.plan;
+      
+      // 2. Fetch the profile to check if they are already active
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status, role')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      // MANDATORY REDIRECT: If writer, go to pricing with FORCE flags
-      if (plan === 'writer') {
-        const forceUrl = `${origin}/pricing?status=confirmed&plan=writer&force_gateway=true&t=${Date.now()}`;
-        return NextResponse.redirect(forceUrl);
+      const isActive = profile?.subscription_status === 'active';
+      const isWriter = user.user_metadata?.plan === 'writer' || profile?.role === 'writer';
+
+      // 3. MANDATORY GATE: If it's a writer and NOT active, force them to pay
+      if (isWriter && !isActive) {
+        return NextResponse.redirect(`${origin}/pricing?status=confirmed&plan=writer&force_gateway=true`);
       }
       
+      // Otherwise, proceed to the blog
       return NextResponse.redirect(`${origin}/blog`);
     }
   }
