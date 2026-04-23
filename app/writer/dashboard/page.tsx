@@ -32,17 +32,12 @@ function DashboardContent() {
   const [mustPay, setMustPay] = useState(false);
   const [payLoading, setPayLoading] = useState<string | null>(null);
 
-  // Initialize a fresh supabase client to bypass any caching
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
   useEffect(() => {
     if (user) {
       const isComingFromPayment = searchParams.get('status') === 'success';
       if (isComingFromPayment) {
-        // If coming from payment, wait 4 seconds then force a fresh check
         setTimeout(() => checkSubscriptionAndFetchData(), 4000);
       } else {
         checkSubscriptionAndFetchData();
@@ -51,13 +46,7 @@ function DashboardContent() {
   }, [user, searchParams]);
 
   async function checkSubscriptionAndFetchData() {
-    // FORCE FRESH FETCH: No caching
-    const { data: profileData, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user?.id)
-      .single();
-    
+    const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user?.id).single();
     if (profileData?.subscription_status === 'active') {
       setProfile(profileData);
       setMustPay(false);
@@ -104,7 +93,7 @@ function DashboardContent() {
             <Sparkles className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-light text-white mb-2 uppercase tracking-[0.2em]">Activate Presence</h2>
-          <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Choose your gateway to enter the Creator Sanctuary</p>
+          <p className="text-white/40 text-[10px] uppercase tracking-widest mb-12">Select your gateway to enter the Creator Sanctuary</p>
           <div className="space-y-4 text-left">
             {paymentMethods.map((m) => (
               <button key={m.id} onClick={() => handlePayment(m.id)} disabled={!!payLoading} className="w-full p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all flex items-center justify-between group">
@@ -124,15 +113,14 @@ function DashboardContent() {
   return (
     <main className="min-h-screen p-6 md:p-12 bg-[var(--bg)] transition-all duration-500">
       <div className="max-w-6xl mx-auto pt-16">
-        
         <AnimatePresence>
           {showSuccess && (
             <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-12 p-8 rounded-[40px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400"><CheckCircle2 className="w-8 h-8" /></div>
-                <div><h3 className="text-2xl font-light text-white mb-1 uppercase tracking-widest leading-none">Welcome to the Sanctuary</h3><p className="text-sm text-white/60 italic mt-2">Your subscription is active. Your voice is now part of the collective.</p></div>
+                <div><h3 className="text-2xl font-light text-white mb-1 uppercase tracking-widest leading-none">Welcome to the Sanctuary</h3><p className="text-sm text-white/60 italic mt-2">Your subscription is active.</p></div>
               </div>
-              <button onClick={() => setShowSuccess(false)} className="p-2 text-white/20 hover:text-white"><X className="w-6 h-6" /></button>
+              <button onClick={() => setShowSuccess(false)}><X className="w-6 h-6" /></button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -140,7 +128,7 @@ function DashboardContent() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 px-4">
           <div>
             <h1 className="text-5xl font-light text-white uppercase tracking-[0.2em]">Creator <span className="italic text-[var(--accent)] font-serif">Sanctuary</span></h1>
-            <p className="text-white/40 text-[10px] uppercase tracking-widest font-mono mt-2 tracking-[0.4em]">Architect: {profile?.username || user?.email}</p>
+            <p className="text-white/40 text-[10px] uppercase tracking-widest font-mono mt-2 tracking-[0.4em]">Presence: {profile?.username || user?.email}</p>
           </div>
           <div className="flex gap-4">
             <Link href="/studio"><button className="px-8 py-4 bg-[var(--accent)] text-[var(--bg)] rounded-2xl font-bold uppercase tracking-widest text-[10px] shadow-2xl hover:scale-[1.02] transition-all">New Reflection</button></Link>
@@ -216,8 +204,10 @@ function DashboardContent() {
 
 export default function WriterDashboard() {
   return (
-    <ProtectedRoute>
-      <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px]">Entering Sanctuary...</div>}><DashboardContent /></Suspense>
-    </ProtectedRoute>
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px]">Entering Sanctuary...</div>}>
+      <ProtectedRoute>
+        <DashboardContent />
+      </ProtectedRoute>
+    </Suspense>
   );
 }
