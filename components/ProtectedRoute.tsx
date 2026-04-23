@@ -1,16 +1,15 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-
-const ADMIN_EMAIL = "lifewithmystic@gmail.com";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [roleLoading, setRoleLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -23,33 +22,26 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 1. Admin always has access
-      if (user.email === ADMIN_EMAIL) {
+      // If they just paid, let them into the dashboard component so it can handle the "wait" UI
+      if (searchParams.get('status') === 'success') {
         setIsAuthorized(true);
         setRoleLoading(false);
         return;
       }
 
-      // 2. For Writer Dashboard, check if user is a writer and active
-      if (pathname.includes('/writer/')) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, subscription_status')
-          .eq('id', user.id)
-          .maybeSingle();
+      // Check subscription status in the database
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .maybeSingle();
 
-        const isWriter = profile?.role === 'writer' || user.user_metadata?.plan === 'writer';
-        const isActive = profile?.subscription_status === 'active';
+      const isActive = profile?.subscription_status === 'active';
 
-        if (!isWriter || !isActive) {
-          router.push('/pricing');
-          return;
-        }
-      }
-
-      // 3. For Admin Panel, strict email check
-      if (pathname.includes('/admin') && user.email !== ADMIN_EMAIL) {
-        router.push('/');
+      // If trying to access writer tools without being active, send to pricing
+      if (pathname.includes('/writer/') && !isActive) {
+        // Only redirect if NOT already on a successful payment return path
+        router.push('/pricing?status=confirmed&plan=writer&force_gateway=true');
         return;
       }
 
@@ -58,14 +50,14 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     }
 
     checkAuthorization();
-  }, [user, loading, router, pathname]);
+  }, [user, loading, router, pathname, searchParams]);
 
   if (loading || roleLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-pulse">✨</div>
-          <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.5em]">Verifying Identity...</p>
+          <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.5em]">Authenticating Presence...</p>
         </div>
       </main>
     );
