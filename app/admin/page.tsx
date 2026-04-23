@@ -2,10 +2,11 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import sanityFetch from '@/lib/sanity';
 import { useAuth } from '@/lib/auth-context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { PenTool, Edit3, Sparkles, LogOut, ChevronRight } from 'lucide-react';
 
 type Post = {
   _id: string;
@@ -16,7 +17,7 @@ type Post = {
 };
 
 function AdminContent() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +25,7 @@ function AdminContent() {
     async function fetchPosts() {
       try {
         const data = await sanityFetch<Post[]>(
-          `*[_type == "post"] | order(publishedAt desc) { _id, title, slug, publishedAt, _createdAt }`
+          `*[_type == "post"] | order(publishedAt desc) [0...5] { _id, title, slug, publishedAt, _createdAt }`
         );
         setPosts(data || []);
       } catch (err) {
@@ -43,41 +44,53 @@ function AdminContent() {
   };
 
   return (
-    <main className="min-h-screen p-12 bg-black text-white">
-      <div className="max-w-4xl mx-auto">
-        <header className="flex justify-between items-center mb-12">
-          <h1 className="text-4xl font-light">Admin Dashboard</h1>
+    <main className="min-h-screen p-6 md:p-12 bg-[#0a0a0a]">
+      <div className="max-w-4xl mx-auto pt-16">
+        <header className="flex justify-between items-end mb-16 px-4">
+          <div>
+            <h1 className="text-4xl font-light text-white uppercase tracking-[0.2em]">Master <span className="italic text-[var(--accent)]">Portal</span></h1>
+            <p className="text-white/40 text-[10px] uppercase tracking-widest font-mono mt-2">Architect Controls</p>
+          </div>
           <button 
             onClick={signOut} 
-            className="text-xs uppercase tracking-widest text-red-500 opacity-80 hover:opacity-100 transition-all font-bold"
+            className="flex items-center gap-2 px-6 py-2 border border-red-500/20 text-red-500/60 rounded-full text-[9px] uppercase tracking-widest font-bold hover:bg-red-500/5 transition-all"
           >
-            Sign Out
+            <LogOut className="w-3 h-3" /> Terminate Session
           </button>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Link href="/admin/create" className="p-8 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-center">
-            <span className="text-2xl block mb-2">✍️</span>
-            <span className="text-sm uppercase tracking-widest">Create Post</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <Link href="/admin/create" className="group">
+            <div className="p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all text-center flex flex-col items-center gap-4 group-hover:border-[var(--accent)]/30 shadow-xl">
+              <div className="p-4 rounded-2xl bg-[var(--accent)]/10 text-[var(--accent)] group-hover:scale-110 transition-transform"><PenTool className="w-6 h-6" /></div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white">Create Reflection</span>
+            </div>
           </Link>
-          <Link href="/admin/edit" className="p-8 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-center">
-            <span className="text-2xl block mb-2">✏️</span>
-            <span className="text-sm uppercase tracking-widest">Edit Posts</span>
+          <Link href="/admin/edit" className="group">
+            <div className="p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all text-center flex flex-col items-center gap-4 group-hover:border-[var(--accent)]/30 shadow-xl">
+              <div className="p-4 rounded-2xl bg-white/5 text-white/40 group-hover:scale-110 transition-transform"><Edit3 className="w-6 h-6" /></div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white">Edit Library</span>
+            </div>
           </Link>
-          <Link href="/studio" className="p-8 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-center">
-            <span className="text-2xl block mb-2">✨</span>
-            <span className="text-sm uppercase tracking-widest">Visual Editor</span>
+          <Link href="/studio" className="group">
+            <div className="p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all text-center flex flex-col items-center gap-4 group-hover:border-[var(--accent)]/30 shadow-xl">
+              <div className="p-4 rounded-2xl bg-white/5 text-white/40 group-hover:scale-110 transition-transform"><Sparkles className="w-6 h-6" /></div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white">Visual Studio</span>
+            </div>
           </Link>
         </div>
 
-        <section>
-          <h2 className="text-xl mb-6 opacity-50 uppercase tracking-widest">Recent Posts</h2>
+        <section className="px-4">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/30 mb-8 font-mono">Recent Transmissions</h2>
           <div className="space-y-4">
             {posts.map((post) => (
-              <Link key={post._id} href={`/blog/${post.slug.current}`} className="block">
-                <div className="p-4 rounded-xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all flex justify-between items-center">
-                  <span className="hover:text-amber-200 transition-colors">{post.title}</span>
-                  <span className="text-xs opacity-30">{formatDate(post.publishedAt || post._createdAt)}</span>
+              <Link key={post._id} href={`/blog/${post.slug.current}`} className="group block">
+                <div className="p-6 rounded-[32px] border border-white/5 bg-white/[0.01] group-hover:border-white/20 group-hover:bg-white/[0.02] transition-all flex justify-between items-center px-8 shadow-sm">
+                  <span className="text-white font-light group-hover:text-[var(--accent)] transition-colors">{post.title}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-mono text-white/20 uppercase tracking-tighter">{formatDate(post.publishedAt || post._createdAt)}</span>
+                    <ChevronRight className="w-4 h-4 text-white/5 group-hover:text-white/20" />
+                  </div>
                 </div>
               </Link>
             ))}
@@ -90,8 +103,10 @@ function AdminContent() {
 
 export default function AdminPage() {
   return (
-    <ProtectedRoute>
-      <AdminContent />
-    </ProtectedRoute>
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px]">Accessing Master Portal...</div>}>
+      <ProtectedRoute>
+        <AdminContent />
+      </ProtectedRoute>
+    </Suspense>
   );
 }
