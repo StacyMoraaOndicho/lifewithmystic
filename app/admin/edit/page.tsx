@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import sanityFetch from '@/lib/sanity';
+import { ChevronLeft, Trash2, Edit3, Eye } from 'lucide-react';
 
 type Post = {
   _id: string;
@@ -13,166 +14,73 @@ type Post = {
   slug: { current: string };
   excerpt: string;
   status: 'draft' | 'published' | 'scheduled';
-  publishedAt?: string;
   views?: number;
-  likes?: number;
 };
 
 function EditPostsContent() {
   const { signOut } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'scheduled'>('all');
 
   useEffect(() => {
     fetchPosts();
-  }, [filter]);
+  }, []);
 
   const fetchPosts = async () => {
     try {
-      const query =
-        filter === 'all'
-          ? `*[_type == "post"] | order(_updatedAt desc)`
-          : `*[_type == "post" && status == "${filter}"] | order(_updatedAt desc)`;
-
-      const data = await sanityFetch<Post[]>(
-        `${query} { _id, title, slug, excerpt, status, publishedAt, views, likes }`
-      );
+      const data = await sanityFetch<Post[]>(`*[_type == "post"] | order(_updatedAt desc) { _id, title, slug, excerpt, status, views }`);
       setPosts(data || []);
     } catch (err) {
-      console.error('Failed to fetch posts:', err);
+      console.error('Fetch failed:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (postId: string) => {
-    if (!confirm('Are you sure? This cannot be undone.')) return;
-
+    if (!confirm('Are you sure you want to delete this reflection?')) return;
     try {
-      const response = await fetch('/api/posts/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId }),
-      });
-
-      if (response.ok) {
-        setPosts(posts.filter(p => p._id !== postId));
-      } else {
-        alert('Failed to delete post');
-      }
+      const response = await fetch('/api/posts/delete', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId }) });
+      if (response.ok) setPosts(posts.filter(p => p._id !== postId));
     } catch (err) {
-      alert('Error deleting post');
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'bg-green-500/20 text-green-300 border-green-500/50';
-      case 'draft':
-        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50';
-      case 'scheduled':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/50';
-      default:
-        return 'bg-gray-500/20 text-gray-300';
+      alert('Deletion failed');
     }
   };
 
   return (
-    <main className="min-h-screen p-12 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl mx-auto"
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+    <main className="min-h-screen p-6 md:p-12 bg-[#0a0a0a]">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto pt-16">
+        <div className="flex justify-between items-end mb-16 px-4">
           <div>
-            <h1 className="text-4xl font-light text-white mb-2">Edit Posts</h1>
-            <p className="text-white/60">Manage your published content</p>
+            <h1 className="text-4xl font-light text-white uppercase tracking-[0.2em]">Manage <span className="italic text-[var(--accent)]">Reflections</span></h1>
+            <Link href="/admin" className="text-[10px] text-white/20 hover:text-white uppercase tracking-widest mt-4 flex items-center gap-2">
+              <ChevronLeft className="w-3 h-3" /> Back to Portal
+            </Link>
           </div>
-          <button
-            onClick={signOut}
-            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-200 rounded-lg"
-          >
-            Sign Out
-          </button>
+          <button onClick={signOut} className="px-6 py-2 border border-red-500/20 text-red-500/60 rounded-full text-[9px] uppercase tracking-widest font-bold hover:bg-red-500/5 transition-all">Sign Out</button>
         </div>
 
-        {/* Filter buttons */}
-        <div className="flex gap-2 mb-8">
-          {(['all', 'published', 'draft', 'scheduled'] as const).map((f) => (
-            <motion.button
-              key={f}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                filter === f
-                  ? 'glass-strong text-white'
-                  : 'glass hover:glass-light'
-              }`}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </motion.button>
+        <div className="space-y-6">
+          {loading ? (
+             <p className="text-white/20 text-center animate-pulse uppercase tracking-[0.5em] text-[10px]">Syncing Library...</p>
+          ) : posts.map((post) => (
+            <div key={post._id} className="p-8 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col md:flex-row justify-between items-center gap-8">
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
+                  <span className={`px-2 py-0.5 rounded-full text-[8px] uppercase font-bold tracking-widest border ${post.status === 'published' ? 'border-emerald-500/30 text-emerald-500/60' : 'border-amber-500/30 text-amber-500/60'}`}>{post.status}</span>
+                  <h3 className="text-xl font-light text-white">{post.title}</h3>
+                </div>
+                <p className="text-sm text-white/40 italic font-light">{post.excerpt}</p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Link href={`/blog/${post.slug.current}`}><button className="p-4 rounded-2xl bg-white/5 text-white/40 hover:text-white transition-all"><Eye className="w-5 h-5" /></button></Link>
+                <Link href={`/admin/edit/${post._id}`}><button className="p-4 rounded-2xl bg-white/5 text-white/40 hover:text-white transition-all"><Edit3 className="w-5 h-5" /></button></Link>
+                <button onClick={() => handleDelete(post._id)} className="p-4 rounded-2xl bg-red-500/5 text-red-500/40 hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-5 h-5" /></button>
+              </div>
+            </div>
           ))}
         </div>
-
-        {/* Posts List */}
-        {loading ? (
-          <p className="text-white/60">Loading posts...</p>
-        ) : posts.length === 0 ? (
-          <p className="text-white/60">No posts found</p>
-        ) : (
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <motion.div
-                key={post._id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ x: 4 }}
-                className="glass p-6 rounded-lg"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white mb-2">{post.title}</h3>
-                    <p className="text-sm text-white/70 mb-3">{post.excerpt}</p>
-                    <div className="flex gap-3 items-center text-xs text-white/50">
-                      <span className={`px-2 py-1 rounded border ${getStatusColor(post.status)}`}>
-                        {post.status}
-                      </span>
-                      {post.views !== undefined && (
-                        <span>👁️ {post.views} views</span>
-                      )}
-                      {post.likes !== undefined && (
-                        <span>❤️ {post.likes} likes</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href={`/blog/${post.slug.current}`}>
-                      <button className="px-3 py-1 glass rounded hover:glass-light transition-all text-sm">
-                        View
-                      </button>
-                    </Link>
-                    <Link href={`/admin/edit/${post._id}`}>
-                      <button className="px-3 py-1 bg-blue-500/20 border border-blue-500/50 rounded hover:bg-blue-500/30 transition-all text-sm">
-                        Edit
-                      </button>
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(post._id)}
-                      className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded hover:bg-red-500/30 transition-all text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
       </motion.div>
     </main>
   );
@@ -180,8 +88,10 @@ function EditPostsContent() {
 
 export default function EditPostsPage() {
   return (
-    <ProtectedRoute>
-      <EditPostsContent />
-    </ProtectedRoute>
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px]">Syncing Archive...</div>}>
+      <ProtectedRoute>
+        <EditPostsContent />
+      </ProtectedRoute>
+    </Suspense>
   );
 }
