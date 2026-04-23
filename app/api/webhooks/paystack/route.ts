@@ -15,15 +15,20 @@ export async function POST(req: Request) {
   if (event.event === 'charge.success') {
     const userId = event.data.metadata?.userId;
     if (userId) {
-      // Use Service Role to bypass RLS and force the update
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+      // USE SERVICE ROLE: This is the definitive "Master Key" to unlock the account
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!, 
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
       
+      console.log(`WEBHOOK: Unlocking sanctuary for user ${userId}`);
+
       await supabase.from('profiles').upsert({ 
         id: userId, 
         subscription_status: 'active',
         role: 'writer',
         updated_at: new Date().toISOString()
-      });
+      }, { onConflict: 'id' });
     }
   }
 
