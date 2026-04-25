@@ -13,13 +13,11 @@ export default function AdminSignupPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // STRICTOR SECURITY: Only the primary architect can register
     if (email.toLowerCase() !== MASTER_ADMIN) {
       setError('Forbidden: This identity cannot be registered as an Architect.');
       return;
@@ -30,6 +28,8 @@ export default function AdminSignupPage() {
       email,
       password,
       options: {
+        // Mark as admin in metadata so the callback can set the correct role
+        data: { role: 'admin' },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/admin`,
       },
     });
