@@ -70,24 +70,26 @@ export default function Nav() {
 
           <div className="hidden md:flex flex-1 items-center max-w-[800px] overflow-hidden relative">
             <div className="flex items-center overflow-x-auto no-scrollbar scroll-smooth h-10 w-full relative">
+              {/* Left Glowing Bar */}
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="h-6 w-[2px] bg-white shrink-0 mr-6 shadow-[0_0_10px_#fff]" 
               />
               
-              <div className="flex items-center gap-10 px-4">
+              <div className="flex items-center gap-8 px-4">
                 {navLinks.map(link => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-[10px] whitespace-nowrap font-medium shrink-0 uppercase tracking-[0.2em]"
+                    className="text-[var(--text)] opacity-40 hover:opacity-100 transition-all text-[11px] lg:text-[13px] whitespace-nowrap font-light shrink-0 uppercase tracking-[0.2em]"
                   >
                     {link.label}
                   </Link>
                 ))}
               </div>
 
+              {/* Right Glowing Bar */}
               <motion.div 
                 animate={{ opacity: [0.3, 0.8, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
@@ -97,8 +99,8 @@ export default function Nav() {
           </div>
 
           <div className="flex items-center gap-4 md:gap-6 shrink-0 ml-12">
-            {/* ADMIN BUTTON - Restored exactly where it was */}
-            <Link href="/admin" className="hidden lg:block px-2 py-1 text-[9px] border border-current opacity-20 hover:opacity-100 rounded transition-all uppercase tracking-widest">
+            {/* ADMIN BUTTON - Restored to original position and style */}
+            <Link href="/admin" className="hidden lg:block px-3 py-1 border border-current opacity-20 hover:opacity-100 rounded transition-all uppercase tracking-widest text-[10px]">
               Admin
             </Link>
 
@@ -106,13 +108,13 @@ export default function Nav() {
               {user ? (
                 <div className="flex items-center gap-3">
                   {(isWriter || isAdmin) && (
-                    <Link href="/writer/dashboard" className="px-3 py-1.5 text-[9px] bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent)]/20 transition-all uppercase tracking-widest font-bold">
+                    <Link href="/writer/dashboard" className="px-3 py-1.5 text-[10px] bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded-lg hover:bg-[var(--accent)]/20 transition-all uppercase tracking-widest font-bold">
                       Dashboard
                     </Link>
                   )}
                   <button 
                     onClick={() => signOut()}
-                    className="px-3 py-1.5 text-[9px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
+                    className="px-3 py-1.5 text-[10px] border border-current opacity-20 hover:opacity-100 rounded-full transition-all uppercase tracking-widest"
                   >
                     Logout
                   </button>
@@ -164,8 +166,8 @@ export default function Nav() {
             className="fixed top-14 left-0 right-0 z-40 md:hidden border-b border-opacity-10 shadow-2xl"
           >
             <div className="max-w-6xl mx-auto px-4 py-6 space-y-4 text-center">
-              <Link href="/admin" onClick={() => setMobileOpen(false)} className="block py-3 text-white/40 font-bold uppercase tracking-widest border-b border-white/5">Admin Panel</Link>
-              {(isWriter || isAdmin) && <Link href="/writer/dashboard" onClick={() => setMobileOpen(false)} className="block py-3 text-[var(--accent)] font-bold uppercase tracking-widest border-b border-white/5">Writer Dashboard</Link>}
+              <Link href="/admin" onClick={() => setMobileOpen(false)} className="block py-3 text-white font-bold uppercase tracking-widest">Admin Panel</Link>
+              {(isWriter || isAdmin) && <Link href="/writer/dashboard" onClick={() => setMobileOpen(false)} className="block py-3 text-[var(--accent)] font-bold uppercase tracking-widest">Writer Dashboard</Link>}
               {navLinks.map(link => (
                 <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className="block py-2 opacity-70 hover:opacity-100 text-lg font-light uppercase tracking-widest">{link.label}</Link>
               ))}

@@ -158,7 +158,7 @@ function DashboardContent() {
                <h2 className="text-2xl font-light text-white uppercase tracking-widest mb-10 px-4">Digital Offerings</h2>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  {products.length > 0 ? products.map((p) => (
-                   <div key={p.id} className="p-10 rounded-[40px] border border-white/10 bg-white/[0.02] flex items-center justify-between group hover:border-[var(--accent)]/30 transition-all">
+                   <div key={p.id} className="p-10 rounded-[40px] border border-white/10 bg-white/[0.02] flex items-center justify-between group hover:border-[var(--accent)]/30 transition-all shadow-xl">
                      <div><div className="text-[9px] text-[var(--accent)] uppercase font-bold tracking-widest mb-2">{p.type}</div><h3 className="text-xl font-light text-white">{p.title}</h3><div className="text-2xl font-light text-white/40">{p.price}</div></div>
                      <LinkIcon className="w-5 h-5 text-white/10 group-hover:text-[var(--accent)] transition-colors" />
                    </div>
