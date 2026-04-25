@@ -15,6 +15,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 type Product = { id: string; title: string; type: string; price: string; link: string; };
 
+const ADMIN_EMAIL = "lifewithmystic@gmail.com";
+
 const paymentMethods = [
   { id: 'mpesa', name: 'M-Pesa / Mobile Money', icon: <Smartphone className="w-5 h-5 text-emerald-500" />, tag: 'Kenya Special' },
   { id: 'card', name: 'Credit / Debit Card', icon: <Globe className="w-5 h-5 text-blue-400" />, tag: 'Africa & Global' },
@@ -41,10 +43,10 @@ function DashboardContent() {
   async function checkSubscriptionAndFetchData() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user?.id).maybeSingle();
     
-    // Status Check
+    const isAdmin = user?.email === ADMIN_EMAIL;
     const isActive = profileData?.subscription_status === 'active' || searchParams.get('status') === 'success';
 
-    if (!isActive) {
+    if (!isAdmin && !isActive) {
       setMustPay(true);
       setLoading(false);
       return;
@@ -97,7 +99,6 @@ function DashboardContent() {
               </button>
             ))}
           </div>
-          <p className="mt-10 text-[9px] text-white/20 uppercase tracking-[0.3em]">One-time subscription: $9 (1,200 KES)</p>
         </motion.div>
       </main>
     );
@@ -108,43 +109,32 @@ function DashboardContent() {
       <div className="max-w-6xl mx-auto pt-16">
         <AnimatePresence>
           {showSuccess && (
-            <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-12 p-8 rounded-[40px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
+            <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-12 p-8 rounded-[40px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between shadow-2xl">
               <div className="flex items-center gap-6">
                 <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400"><CheckCircle2 className="w-8 h-8" /></div>
                 <div><h3 className="text-2xl font-light text-white mb-1 uppercase tracking-widest">Presence Activated</h3><p className="text-sm text-white/60 italic">Your voice is now part of the collective sanctuary.</p></div>
               </div>
-              <button onClick={() => setShowSuccess(false)} className="p-2 text-white/20 hover:text-white"><X className="w-6 h-6" /></button>
+              <button onClick={() => setShowSuccess(false)} className="p-2 text-white/20 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 px-4">
           <div>
-            <h1 className="text-5xl font-light text-white uppercase tracking-[0.2em]">Creator <span className="italic text-[var(--accent)] font-serif">Sanctuary</span></h1>
-            <p className="text-white/40 text-[10px] uppercase tracking-widest font-mono mt-2 tracking-[0.4em]">Presence: {profile?.username || user?.email?.split('@')[0]}</p>
+            <motion.h1 className="text-5xl font-light text-white uppercase tracking-[0.2em]">Creator <span className="italic text-[var(--accent)] font-serif">Sanctuary</span></motion.h1>
+            <p className="text-white/40 text-[10px] uppercase tracking-widest font-mono mt-2 tracking-[0.4em]">Presence: {profile?.username || user?.email}</p>
           </div>
-          
-          <div className="flex items-center gap-4">
-            {/* MASTER PORTAL LINK */}
+          <div className="flex gap-4">
             <Link href="/admin">
-              <button className="px-6 py-4 border border-white/10 text-white/40 hover:text-white hover:border-white/30 rounded-2xl font-bold uppercase tracking-widest text-[9px] flex items-center gap-2 transition-all">
+              <button className="px-6 py-4 border border-white/10 text-white/40 hover:text-white rounded-2xl font-bold uppercase tracking-widest text-[9px] flex items-center gap-2 transition-all">
                 <LayoutDashboard className="w-3 h-3" /> Master Portal
               </button>
             </Link>
-            <Link href="/studio">
-              <button className="px-8 py-4 bg-[var(--accent)] text-[var(--bg)] rounded-2xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl hover:scale-[1.02] transition-all">
-                <PenTool className="w-4 h-4" /> New Reflection
-              </button>
-            </Link>
-            <Link href="/writer/settings">
-              <button className="p-4 bg-[var(--text)]/5 text-[var(--text)] border border-[var(--text)]/10 rounded-2xl hover:bg-[var(--text)]/10 transition-all shadow-sm">
-                <Settings className="w-5 h-5 opacity-40" />
-              </button>
-            </Link>
+            <Link href="/studio"><button className="px-8 py-4 bg-[var(--accent)] text-[var(--bg)] rounded-2xl font-bold uppercase tracking-widest text-[10px] shadow-2xl hover:scale-[1.02] transition-all">New Reflection</button></Link>
+            <Link href="/writer/settings"><button className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all"><Settings className="w-5 h-5 opacity-40" /></button></Link>
           </div>
         </header>
 
-        {/* STATS SECTION */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {[
             { label: 'Total Readers', value: '1,240', icon: <Users className="w-5 h-5" />, color: 'text-blue-400' },
@@ -165,29 +155,26 @@ function DashboardContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           <div className="lg:col-span-2 space-y-16">
             <section>
-              <div className="flex items-center justify-between mb-10 px-4">
-                <div className="flex items-center gap-4"><Plus className="w-5 h-5 text-[var(--accent)]" /><h2 className="text-2xl font-light text-white uppercase tracking-widest">Digital Offerings</h2></div>
-                <Link href="/writer/settings"><button className="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold hover:underline font-mono">Manage Store</button></Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {products.length > 0 ? products.map((p) => (
-                  <div key={p.id} className="p-10 rounded-[40px] border border-white/10 bg-white/[0.02] flex items-center justify-between group hover:border-[var(--accent)]/30 transition-all shadow-xl">
-                    <div><div className="text-[9px] text-[var(--accent)] uppercase font-bold tracking-widest mb-2">{p.type}</div><h3 className="text-xl font-light text-white">{p.title}</h3><div className="text-2xl font-light text-white/40">{p.price}</div></div>
-                    <LinkIcon className="w-5 h-5 text-white/10 group-hover:text-[var(--accent)] transition-colors" />
-                  </div>
-                )) : (
-                  <Link href="/writer/settings" className="block col-span-full">
-                    <button className="w-full p-16 rounded-[40px] border-2 border-dashed border-white/10 text-white/20 hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all flex flex-col items-center justify-center gap-4 group">
-                      <Plus className="w-10 h-10 group-hover:scale-110 transition-transform" /><span className="text-[10px] uppercase tracking-[0.4em] font-bold">Initiate New Offering</span>
-                    </button>
-                  </Link>
-                )}
-              </div>
+               <h2 className="text-2xl font-light text-white uppercase tracking-widest mb-10 px-4">Digital Offerings</h2>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 {products.length > 0 ? products.map((p) => (
+                   <div key={p.id} className="p-10 rounded-[40px] border border-white/10 bg-white/[0.02] flex items-center justify-between group hover:border-[var(--accent)]/30 transition-all">
+                     <div><div className="text-[9px] text-[var(--accent)] uppercase font-bold tracking-widest mb-2">{p.type}</div><h3 className="text-xl font-light text-white">{p.title}</h3><div className="text-2xl font-light text-white/40">{p.price}</div></div>
+                     <LinkIcon className="w-5 h-5 text-white/10 group-hover:text-[var(--accent)] transition-colors" />
+                   </div>
+                 )) : (
+                   <Link href="/writer/settings" className="block col-span-full">
+                     <button className="w-full p-16 rounded-[40px] border-2 border-dashed border-white/10 text-white/20 hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all flex flex-col items-center justify-center gap-4 group">
+                       <Plus className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                       <span className="text-[10px] uppercase tracking-[0.4em] font-bold">Initiate New Offering</span>
+                     </button>
+                   </Link>
+                 )}
+               </div>
             </section>
 
-            {/* RESONANCE MAP (ANALYTICS) */}
             <section>
-              <div className="flex items-center gap-4 mb-10 px-4"><TrendingUp className="w-6 h-6 text-amber-400 opacity-40" /><h2 className="text-2xl font-light text-white uppercase tracking-widest">Resonance Map</h2></div>
+              <h2 className="text-2xl font-light text-white uppercase tracking-widest mb-10 px-4">Resonance Map</h2>
               <div className="rounded-[40px] border border-white/10 bg-[var(--text)]/[0.01] overflow-hidden shadow-2xl">
                 <table className="w-full text-left text-sm">
                   <thead><tr className="border-b border-white/10 text-white/30 uppercase tracking-widest text-[10px] font-bold"><th className="px-10 py-8">Reflection</th><th className="px-10 py-8 text-right">State</th></tr></thead>
@@ -207,10 +194,6 @@ function DashboardContent() {
               <p className="text-white/70 text-sm mb-10 leading-relaxed italic font-light">Your resonance is expanding. Share a new reflection to deepen the collective connection.</p>
               <button className="w-full py-5 bg-white text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 hover:shadow-2xl transition-all">Radiate Now</button>
             </section>
-            <section className="p-12 rounded-[50px] border border-white/10 bg-white/[0.01] shadow-xl">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/30 mb-10 text-center font-mono">Architect Path</h3>
-              <div className="space-y-10 text-sm text-white/50 italic font-light"><p>1. Cross-link your essays to create a knowledge constellation.</p><p>2. Add your new course link to your public bio.</p></div>
-            </section>
           </div>
         </div>
       </div>
@@ -221,7 +204,7 @@ function DashboardContent() {
 export default function WriterDashboard() {
   return (
     <ProtectedRoute>
-      <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">Entering Sanctuary...</div>}><DashboardContent /></Suspense>
+      <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px]">Entering Sanctuary...</div>}><DashboardContent /></Suspense>
     </ProtectedRoute>
   );
 }
