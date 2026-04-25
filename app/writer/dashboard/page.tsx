@@ -23,11 +23,6 @@ const paymentMethods = [
   { id: 'bank', name: 'Bank Transfer (Pesalink)', icon: <CreditCard className="w-5 h-5 text-yellow-500" />, tag: 'Direct' }
 ];
 
-// --- FORCED STRUCTURAL CHANGE FOR GIT DETECTION ---
-function DashboardLoader() {
-  return <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">Entering Sanctuary...</div>;
-}
-
 function DashboardContent() {
   const { user } = useAuth();
   const router = useRouter();
@@ -47,10 +42,11 @@ function DashboardContent() {
 
   async function checkSubscriptionAndFetchData() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user?.id).maybeSingle();
-    const isAdmin = user?.email === ADMIN_EMAIL;
+    
+    // Status Check
     const isActive = profileData?.subscription_status === 'active' || searchParams.get('status') === 'success';
 
-    if (!isAdmin && !isActive) {
+    if (!isActive && user?.email !== ADMIN_EMAIL) {
       setMustPay(true);
       setLoading(false);
       return;
@@ -81,7 +77,7 @@ function DashboardContent() {
     }
   };
 
-  if (loading) return <DashboardLoader />;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px] animate-pulse">Entering Sanctuary...</div>;
 
   if (mustPay) {
     return (
@@ -207,10 +203,10 @@ function DashboardContent() {
 
 export default function WriterDashboard() {
   return (
-    <ProtectedRoute>
-      <Suspense fallback={<DashboardLoader />}>
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] text-[10px]">Entering Sanctuary...</div>}>
+      <ProtectedRoute>
         <DashboardContent />
-      </Suspense>
-    </ProtectedRoute>
+      </ProtectedRoute>
+    </Suspense>
   );
 }
