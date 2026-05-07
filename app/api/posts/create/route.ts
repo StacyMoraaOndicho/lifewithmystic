@@ -14,46 +14,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get Sanity credentials from environment
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
     const token = process.env.SANITY_API_TOKEN;
 
-    // If Sanity isn't configured, fall back to the in-memory store.
-    if (!projectId || !token) {
-      const localId = `local-${Date.now()}`;
-
-      addFallbackPost({
-        _id: localId,
-        title,
-        slug: { current: slug },
-        excerpt,
-        body,
-        publishedAt,
-      });
-
-      return NextResponse.json(
-        {
-          message: 'Post created locally (Sanity not configured)',
-          slug,
-          id: localId,
-        },
-        { status: 201 }
-      );
-    }
-
-    // Create document in Sanity
+    // Post structure for Sanity
     const doc = {
       _type: 'post',
       title,
-      slug: { current: slug },
+      slug: { 
+        _type: 'slug',
+        current: slug 
+      },
       excerpt,
       body,
       publishedAt,
+      status: 'published', // Ensure it shows up in filtered queries
     };
 
+    // If token is missing, use local fallback
+    if (!token || !projectId) {
+      const localId = `local-${Date.now()}`;
+      addFallbackPost({ ...doc, _id: localId });
+      return NextResponse.json({ message: 'Saved to local memory (Token missing)', slug }, { status: 201 });
+    }
+
+    // Send to Sanity
     const response = await fetch(
-      `https://${projectId}.api.sanity.io/v2021-06-07/data/mutate/${dataset}`,
+      `https://${projectId}.api.sanity.io/v2021-06-07/data/mutate/${dataset}?returnIds=true`,
       {
         method: 'POST',
         headers: {
@@ -66,31 +54,21 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    const result = await response.json();
+
     if (!response.ok) {
-      const error = await response.json();
-      console.error('Sanity error:', error);
-      return NextResponse.json(
-        { message: 'Failed to create post in Sanity', error },
-        { status: 500 }
-      );
+      console.error('Sanity Error:', result);
+      return NextResponse.json({ message: 'Sanity rejected the post', error: result }, { status: 500 });
     }
 
-    const result = await response.json();
-    const createdDoc = result.results?.[0]?.document;
+    return NextResponse.json({
+      message: 'Reflection successfully published to the Sanctuary',
+      slug,
+      id: result.results?.[0]?.id,
+    }, { status: 201 });
 
-    return NextResponse.json(
-      {
-        message: 'Post created successfully',
-        slug,
-        id: createdDoc?._id,
-      },
-      { status: 201 }
-    );
   } catch (err: any) {
-    console.error('Error creating post:', err);
-    return NextResponse.json(
-      { message: 'Internal server error', error: err.message },
-      { status: 500 }
-    );
+    console.error('Create Post Error:', err);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
