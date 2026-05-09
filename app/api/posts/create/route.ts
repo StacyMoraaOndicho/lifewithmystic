@@ -4,21 +4,18 @@ import { addFallbackPost } from '@/lib/sanity';
 export async function POST(request: NextRequest) {
   try {
     const requestBody = await request.json();
-    const { title, slug, excerpt, body, publishedAt } = requestBody;
+    const { title, slug, excerpt, content, publishedAt } = requestBody;
 
-    // Validate required fields
-    if (!title || !slug || !excerpt || !body || !publishedAt) {
-      return NextResponse.json(
-        { message: 'Missing required fields' },
-        { status: 400 }
-      );
+    // 1. Validate inputs
+    if (!title || !slug || !excerpt || !content || !publishedAt) {
+      return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
     }
 
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
     const token = process.env.SANITY_API_TOKEN;
 
-    // Post structure for Sanity
+    // 2. Prepare standardized Sanity document
     const doc = {
       _type: 'post',
       title,
@@ -27,19 +24,33 @@ export async function POST(request: NextRequest) {
         current: slug 
       },
       excerpt,
-      body,
-      publishedAt,
-      status: 'published', // Ensure it shows up in filtered queries
+      // Convert simple date (YYYY-MM-DD) to full ISO DateTime for Sanity compatibility
+      publishedAt: new Date(publishedAt).toISOString(),
+      body: [
+        {
+          _type: 'block',
+          style: 'normal',
+          markDefs: [],
+          children: [
+            {
+              _type: 'span',
+              text: content,
+            },
+          ],
+        },
+      ],
+      status: 'published', // Marker for your analytics and filters
     };
 
-    // If token is missing, use local fallback
-    if (!token || !projectId) {
+    // 3. Handle missing configuration
+    if (!token || !projectId || projectId === 'none') {
       const localId = `local-${Date.now()}`;
       addFallbackPost({ ...doc, _id: localId });
-      return NextResponse.json({ message: 'Saved to local memory (Token missing)', slug }, { status: 201 });
+      console.warn('Sanity token missing. Post saved to temporary local memory.');
+      return NextResponse.json({ message: 'Saved locally (Check Vercel Env Vars)', slug }, { status: 201 });
     }
 
-    // Send to Sanity
+    // 4. Send mutation to Sanity
     const response = await fetch(
       `https://${projectId}.api.sanity.io/v2021-06-07/data/mutate/${dataset}?returnIds=true`,
       {
@@ -57,18 +68,18 @@ export async function POST(request: NextRequest) {
     const result = await response.json();
 
     if (!response.ok) {
-      console.error('Sanity Error:', result);
-      return NextResponse.json({ message: 'Sanity rejected the post', error: result }, { status: 500 });
+      console.error('Sanity Mutation Error:', result);
+      return NextResponse.json({ message: 'Sanity rejected the post', details: result.error?.message }, { status: 500 });
     }
 
     return NextResponse.json({
-      message: 'Reflection successfully published to the Sanctuary',
+      message: 'Reflection successfully published',
       slug,
       id: result.results?.[0]?.id,
     }, { status: 201 });
 
   } catch (err: any) {
-    console.error('Create Post Error:', err);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('Create Post Logic Error:', err);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }

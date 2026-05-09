@@ -9,7 +9,7 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: false,
+  useCdn: false, // Setting this to false ensures we skip the global edge cache
 });
 
 const builder = createImageUrlBuilder({
@@ -61,41 +61,21 @@ export function addFallbackPost(post: SanityPost) {
   return posts;
 }
 
-// Fixed to accept two arguments to match the API route usage
-export function updateFallbackPost(id: string, data: Partial<SanityPost>) {
-  const posts = getFallbackPosts();
-  const index = posts.findIndex(p => p._id === id);
-  if (index !== -1) {
-    posts[index] = { ...posts[index], ...data };
-    return posts[index];
-  }
-  return null;
-}
-
-export function deleteFallbackPost(id: string) {
-  const posts = getFallbackPosts();
-  const index = posts.findIndex(p => p._id === id);
-  if (index !== -1) {
-    posts.splice(index, 1);
-  }
-  return posts;
-}
-
 export async function sanityFetch<G = any>(query: string, params: Record<string, any> = {}): Promise<G> {
   if (projectId && projectId !== 'none') {
     try {
-      return await client.fetch(query, params);
+      // MANDATORY: Force Next.js to skip its internal fetch cache for real-time updates
+      return await client.fetch(query, params, {
+        cache: 'no-store',
+      });
     } catch (error) {
       console.warn("Sanity fetch failed, falling back to local data:", error);
     }
   }
 
+  // Fallback for when Sanity is not connected
   if (query.includes('_type == "post"')) {
     const posts = getFallbackPosts();
-    if (query.includes('slug.current == $slug') && params?.slug) {
-      const post = posts.find((p) => p.slug.current === params.slug);
-      return (post ? [post] : []) as any;
-    }
     return posts as any;
   }
 
