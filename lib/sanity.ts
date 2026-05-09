@@ -9,7 +9,7 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: false, // Setting this to false ensures we skip the global edge cache
+  useCdn: false,
 });
 
 const builder = createImageUrlBuilder({
@@ -61,19 +61,35 @@ export function addFallbackPost(post: SanityPost) {
   return posts;
 }
 
+export function updateFallbackPost(id: string, data: Partial<SanityPost>) {
+  const posts = getFallbackPosts();
+  const index = posts.findIndex(p => p._id === id);
+  if (index !== -1) {
+    posts[index] = { ...posts[index], ...data };
+    return posts[index];
+  }
+  return null;
+}
+
+export function deleteFallbackPost(id: string) {
+  const posts = getFallbackPosts();
+  const index = posts.findIndex(p => p._id === id);
+  if (index !== -1) {
+    posts.splice(index, 1);
+    return true;
+  }
+  return false;
+}
+
 export async function sanityFetch<G = any>(query: string, params: Record<string, any> = {}): Promise<G> {
   if (projectId && projectId !== 'none') {
     try {
-      // MANDATORY: Force Next.js to skip its internal fetch cache for real-time updates
-      return await client.fetch(query, params, {
-        cache: 'no-store',
-      });
+      return await client.fetch(query, params, { cache: 'no-store' });
     } catch (error) {
       console.warn("Sanity fetch failed, falling back to local data:", error);
     }
   }
 
-  // Fallback for when Sanity is not connected
   if (query.includes('_type == "post"')) {
     const posts = getFallbackPosts();
     return posts as any;
