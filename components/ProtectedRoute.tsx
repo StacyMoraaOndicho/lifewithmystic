@@ -24,27 +24,33 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 1. Fetch profile from DB
+      // 1. Fetch profile from DB to get the true role and status
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, subscription_status')
         .eq('id', user.id)
         .maybeSingle();
 
-      // 2. Identify Role & Status
       const role = profile?.role || user.user_metadata?.role || user.user_metadata?.plan || 'seeker';
       const status = profile?.subscription_status || 'inactive';
       const isAdmin = role === 'admin' || user.email === ADMIN_EMAIL;
       const isActive = status === 'active' || searchParams.get('status') === 'success';
 
-      // 3. ADMIN ACCESS: Always authorized
+      // 2. ADMIN ACCESS: Always authorized
       if (isAdmin) {
         setIsAuthorized(true);
         setRoleLoading(false);
         return;
       }
 
-      // 4. WRITER PROTECTION: Must be active for dashboard or settings
+      // 3. JUST PAID BYPASS: If they just returned from Paystack
+      if (searchParams.get('status') === 'success') {
+        setIsAuthorized(true);
+        setRoleLoading(false);
+        return;
+      }
+
+      // 4. WRITER & SETTINGS PROTECTION: Must be active to see /writer/ routes
       if (pathname.includes('/writer/')) {
         if (!isActive) {
           router.push('/pricing?status=confirmed&plan=writer&force_gateway=true');

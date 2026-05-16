@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, ArrowRight, Clock, Calendar } from "lucide-react";
+import { Loader2, ArrowRight, Calendar } from "lucide-react";
 
 type PostPreview = {
   id: string;
@@ -12,9 +12,12 @@ type PostPreview = {
   slug: string;
   published_at: string;
   excerpt: string;
+  // Supabase returns joins as arrays in TS by default
   profiles?: {
     username: string;
-  };
+  } | {
+    username: string;
+  }[];
 };
 
 export default function BlogPage() {
@@ -27,7 +30,6 @@ export default function BlogPage() {
 
   async function fetchPosts() {
     try {
-      // Fetch posts directly from Supabase, including the author's username
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -38,7 +40,7 @@ export default function BlogPage() {
         .order('published_at', { ascending: false });
 
       if (error) throw error;
-      setPosts(data || []);
+      setPosts((data as any) || []);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
@@ -79,40 +81,45 @@ export default function BlogPage() {
           </div>
         ) : (
           <div className="space-y-12">
-            {posts.map((post, idx) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <Link href={`/blog/${post.slug}`}>
-                  <div className="group p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[var(--accent)]/30 transition-all duration-500 shadow-xl">
-                    <div className="flex flex-col gap-6">
-                      <div className="flex justify-between items-start">
-                        <h2 className="text-3xl font-light leading-tight group-hover:text-[var(--accent)] transition-colors">
-                          {post.title}
-                        </h2>
-                        <ArrowRight className="w-6 h-6 text-white/10 group-hover:text-[var(--accent)] group-hover:translate-x-2 transition-all" />
-                      </div>
-                      
-                      <p className="text-white/50 leading-relaxed italic font-light line-clamp-3">
-                        {post.excerpt}
-                      </p>
-
-                      <div className="flex items-center gap-8 pt-4 border-t border-white/5 mt-4">
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/30 font-bold">
-                          <Calendar className="w-3 h-3" /> {formatDate(post.published_at)}
+            {posts.map((post, idx) => {
+              // Helper to handle the array-or-object type from Supabase joins
+              const authorProfile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
+              
+              return (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <Link href={`/blog/${post.slug}`}>
+                    <div className="group p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[var(--accent)]/30 transition-all duration-500 shadow-xl">
+                      <div className="flex flex-col gap-6">
+                        <div className="flex justify-between items-start">
+                          <h2 className="text-3xl font-light leading-tight group-hover:text-[var(--accent)] transition-colors">
+                            {post.title}
+                          </h2>
+                          <ArrowRight className="w-6 h-6 text-white/10 group-hover:text-[var(--accent)] group-hover:translate-x-2 transition-all" />
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--accent)] font-bold">
-                          By {post.profiles?.username || 'Architect'}
+                        
+                        <p className="text-white/50 leading-relaxed italic font-light line-clamp-3">
+                          {post.excerpt}
+                        </p>
+
+                        <div className="flex items-center gap-8 pt-4 border-t border-white/5 mt-4">
+                          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/30 font-bold">
+                            <Calendar className="w-3 h-3" /> {formatDate(post.published_at)}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--accent)] font-bold">
+                            By {authorProfile?.username || 'Architect'}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
