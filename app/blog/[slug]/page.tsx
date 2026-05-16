@@ -5,12 +5,27 @@ import { MarginReflections } from "@/app/components/MarginReflections";
 import PostInteractions from "@/components/PostInteractions";
 import Comments from "@/components/Comments";
 import Link from "next/link";
-import { User, Calendar, ArrowLeft } from "lucide-react";
+import { User, Lock, Calendar, ArrowLeft } from "lucide-react";
+
+type Post = {
+  id: string;
+  title: string;
+  slug: string;
+  published_at: string;
+  content: string;
+  excerpt?: string;
+  profiles?: {
+    id: string;
+    username: string;
+    bio?: string;
+  };
+};
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
-  const { data: postData, error } = await supabase
+  // Fetch post from Supabase
+  const { data: post, error } = await supabase
     .from('posts')
     .select(`
       id, title, slug, published_at, content, excerpt,
@@ -19,12 +34,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     .eq('slug', slug)
     .maybeSingle();
 
-  if (!postData || error) return notFound();
+  if (!post || error) return notFound();
 
-  // FIX: Supabase joins return an array in TS. Extract the first item safely.
-  const profiles = postData.profiles as any;
-  const author = Array.isArray(profiles) ? profiles[0] : profiles;
-
+  // Rendering logic for plain text content with line breaks
   const renderContent = (text: string) => {
     return text.split('\n').map((para, i) => (
       <p key={i} className="mb-6">{para}</p>
@@ -42,7 +54,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
         <header className="mb-16">
           <h1 className="text-6xl font-light mb-8 tracking-tight leading-tight uppercase">
-            {postData.title}
+            {post.title}
           </h1>
           
           <div className="flex items-center gap-8 mb-12">
@@ -51,33 +63,33 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <User className="w-4 h-4" />
               </div>
               <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--accent)]">
-                {author?.username || 'Architect'}
+                {post.profiles?.username || 'Architect'}
               </span>
             </div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/20 font-bold">
               <Calendar className="w-3 h-3" /> 
-              {new Date(postData.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date(post.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
           </div>
 
-          {postData.excerpt && (
+          {post.excerpt && (
             <p className="text-2xl text-white/40 italic leading-relaxed border-l border-[var(--accent)]/30 pl-8 font-light">
-              {postData.excerpt}
+              {post.excerpt}
             </p>
           )}
         </header>
 
         <section className="prose prose-invert prose-lg max-w-none font-light leading-loose text-white/80 font-serif">
-          {renderContent(postData.content)}
+          {renderContent(post.content)}
         </section>
 
         <section className="mt-24 pt-12 border-t border-white/5">
           <PostInteractions 
-            postId={postData.id} 
-            title={postData.title} 
-            url={`/blog/${postData.slug}`} 
+            postId={post.id} 
+            title={post.title} 
+            url={`/blog/${post.slug}`} 
           />
-          <Comments postId={postData.id} />
+          <Comments postId={post.id} />
         </section>
       </article>
 

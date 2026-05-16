@@ -5,6 +5,8 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 
+const ADMIN_EMAIL = "lifewithmystic@gmail.com";
+
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -22,27 +24,27 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 1. Fetch profile from DB to get the true role and status
+      // 1. Fetch profile from DB
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, subscription_status')
         .eq('id', user.id)
         .maybeSingle();
 
+      // 2. Identify Role & Status
       const role = profile?.role || user.user_metadata?.role || user.user_metadata?.plan || 'seeker';
       const status = profile?.subscription_status || 'inactive';
-      
-      const isAdmin = role === 'admin';
+      const isAdmin = role === 'admin' || user.email === ADMIN_EMAIL;
       const isActive = status === 'active' || searchParams.get('status') === 'success';
 
-      // 2. ADMIN ACCESS: Admins have free pass everywhere
+      // 3. ADMIN ACCESS: Always authorized
       if (isAdmin) {
         setIsAuthorized(true);
         setRoleLoading(false);
         return;
       }
 
-      // 3. WRITER & SETTINGS PROTECTION: Must be active to see /writer/ routes
+      // 4. WRITER PROTECTION: Must be active for dashboard or settings
       if (pathname.includes('/writer/')) {
         if (!isActive) {
           router.push('/pricing?status=confirmed&plan=writer&force_gateway=true');

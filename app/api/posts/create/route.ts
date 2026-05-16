@@ -1,49 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { addFallbackPost } from '@/lib/sanity';
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, slug, excerpt, content, publishedAt, userId } = await request.json();
+    const requestBody = await request.json();
+    const { title, slug, excerpt, content, publishedAt } = requestBody;
 
-    // 1. Mandatory Fields Check
-    if (!title || !slug || !content) {
-      return NextResponse.json({ message: 'Title, Slug, and Content are required' }, { status: 400 });
+    // 1. Validate inputs
+    if (!title || !slug || !excerpt || !content || !publishedAt) {
+      return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
     }
 
-    // 2. Initialize Supabase with Service Role to bypass security for the Admin action
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
+    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
+    const token = process.env.SANITY_API_TOKEN;
+
+    // 2. Prepare standardized Sanity document
+    const doc = {
+      _type: 'post',
+      title,
+      slug: { 
+        _type: 'slug',
+        current: slug 
+      },
+      excerpt,
+      // Convert simple date (YYYY-MM-DD) to full ISO DateTime for Sanity compatibility
+      publishedAt: new Date(publishedAt).toISOString(),
+      body: [
+        {
+          _type: 'block',
+          style: 'normal',
+          markDefs: [],
+          children: [
+            {
+              _type: 'span',
+              text: content,
+            },
+          ],
+        },
+      ],
+      status: 'published', // Marker for your analytics and filters
+    };
+
+    // 3. Handle missing configuration
+    if (!token || !projectId || projectId === 'none') {
+      const localId = `local-${Date.now()}`;
+      addFallbackPost({ ...doc, _id: localId });
+      console.warn('Sanity token missing. Post saved to temporary local memory.');
+      return NextResponse.json({ message: 'Saved locally (Check Vercel Env Vars)', slug }, { status: 201 });
+    }
+
+    // 4. Send mutation to Sanity
+    const response = await fetch(
+      `https://${projectId}.api.sanity.io/v2021-06-07/data/mutate/${dataset}?returnIds=true`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mutations: [{ create: doc }],
+        }),
+      }
     );
 
-    // 3. Insert the Reflection into the Collective
-    const { data, error } = await supabase
-      .from('posts')
-      .insert({
-        title,
-        slug,
-        excerpt,
-        content,
-        published_at: publishedAt || new Date().toISOString(),
-        author_id: userId,
-        status: 'published'
-      })
-      .select()
-      .single();
+    const result = await response.json();
 
-    if (error) {
-      console.error('Supabase error:', error.message);
-      return NextResponse.json({ message: 'Database failure: ' + error.message }, { status: 500 });
+    if (!response.ok) {
+      console.error('Sanity Mutation Error:', result);
+      return NextResponse.json({ message: 'Sanity rejected the post', details: result.error?.message }, { status: 500 });
     }
 
     return NextResponse.json({
       message: 'Reflection successfully published',
-      slug: data.slug,
-      id: data.id
+      slug,
+      id: result.results?.[0]?.id,
     }, { status: 201 });
 
   } catch (err: any) {
-    console.error('Internal Error:', err);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('Create Post Logic Error:', err);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
