@@ -5,7 +5,7 @@ import { MarginReflections } from "@/app/components/MarginReflections";
 import PostInteractions from "@/components/PostInteractions";
 import Comments from "@/components/Comments";
 import Link from "next/link";
-import { User, Lock, Calendar, ArrowLeft } from "lucide-react";
+import { User, Calendar, ArrowLeft } from "lucide-react";
 
 type Post = {
   id: string;
@@ -14,18 +14,13 @@ type Post = {
   published_at: string;
   content: string;
   excerpt?: string;
-  profiles?: {
-    id: string;
-    username: string;
-    bio?: string;
-  };
+  profiles?: any; // Using any here to handle Supabase's complex join types safely
 };
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
-  // Fetch post from Supabase
-  const { data: post, error } = await supabase
+  const { data, error } = await supabase
     .from('posts')
     .select(`
       id, title, slug, published_at, content, excerpt,
@@ -34,9 +29,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     .eq('slug', slug)
     .maybeSingle();
 
-  if (!post || error) return notFound();
+  if (!data || error) return notFound();
+  
+  const post = data as Post;
+  
+  // Handle Supabase returning join as array or single object
+  const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
 
-  // Rendering logic for plain text content with line breaks
   const renderContent = (text: string) => {
     return text.split('\n').map((para, i) => (
       <p key={i} className="mb-6">{para}</p>
@@ -63,7 +62,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <User className="w-4 h-4" />
               </div>
               <span className="text-[10px] uppercase tracking-widest font-bold text-[var(--accent)]">
-                {post.profiles?.username || 'Architect'}
+                {author?.username || 'Architect'}
               </span>
             </div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/20 font-bold">
