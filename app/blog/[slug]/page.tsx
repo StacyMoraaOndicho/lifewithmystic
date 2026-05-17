@@ -22,8 +22,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   if (!postData || error) return notFound();
 
   // FIX: Supabase joins return an array in TS. Extract the first item safely.
-  const authorData = (postData as any).profiles;
-  const author = Array.isArray(authorData) ? authorData[0] : authorData;
+  const profiles = (postData as any).profiles;
+  const author = Array.isArray(profiles) ? profiles[0] : profiles;
 
   const renderContent = (text: string) => {
     return text.split('\n').map((para: string, i: number) => (
