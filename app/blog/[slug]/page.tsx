@@ -21,12 +21,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   if (!postData || error) return notFound();
 
-  // FIX: Supabase joins return an array in TS. Extract the first item safely.
+  // FIX: Supabase returns join data as an array in TS. Extract author safely.
   const profiles = (postData as any).profiles;
   const author = Array.isArray(profiles) ? profiles[0] : profiles;
 
   const renderContent = (text: string) => {
-    return text.split('\n').map((para: string, i: number) => (
+    return text.split('\n').map((para, i) => (
       <p key={i} className="mb-6">{para}</p>
     ));
   };

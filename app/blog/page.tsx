@@ -45,8 +45,24 @@ export default function BlogPage() {
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', { 
-      year: 'numeric', month: 'long', day: 'numeric' 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
     });
+  };
+
+  const getRelativeTime = (date?: string) => {
+    if (!date) return '';
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffMs = now.getTime() - postDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return `${Math.floor(diffDays / 30)} months ago`;
   };
 
   return (
@@ -60,18 +76,25 @@ export default function BlogPage() {
           >
             Essays
           </motion.h1>
-          <p className="text-white/40 italic text-lg leading-relaxed">A sanctuary for shared wisdom and silent reflections.</p>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="h-[2px] w-24 bg-gradient-to-r from-amber-400 to-rose-400 mb-8"
+          />
+          <p className="text-white/40 italic text-lg leading-relaxed max-w-xl">A sanctuary for shared wisdom and silent reflections.</p>
         </header>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
-            <p className="font-mono text-[10px] uppercase tracking-widest opacity-20">Synchronizing Sanctuary...</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest opacity-20">Synchronizing...</p>
           </div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-6">
             {posts.map((post, idx) => {
               const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
+              
               return (
                 <motion.div
                   key={post.id}
@@ -80,23 +103,28 @@ export default function BlogPage() {
                   transition={{ delay: idx * 0.1 }}
                 >
                   <Link href={`/blog/${post.slug}`}>
-                    <div className="group p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[var(--accent)]/30 transition-all duration-500 shadow-xl">
-                      <div className="flex flex-col gap-6">
-                        <div className="flex justify-between items-start">
-                          <h2 className="text-3xl font-light leading-tight group-hover:text-[var(--accent)] transition-colors uppercase">
+                    <div className="group p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[var(--accent)]/30 transition-all duration-500 shadow-xl">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex-1">
+                          <h2 className="text-2xl font-light mb-3 group-hover:text-[var(--accent)] transition-colors uppercase tracking-tight">
                             {post.title}
                           </h2>
-                          <ArrowRight className="w-6 h-6 text-white/10 group-hover:text-[var(--accent)] group-hover:translate-x-2 transition-all" />
-                        </div>
-                        <p className="text-white/50 leading-relaxed italic font-light line-clamp-3">{post.excerpt}</p>
-                        <div className="flex items-center gap-8 pt-4 border-t border-white/5 mt-4">
-                          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/30 font-bold">
-                            <Calendar className="w-3 h-3" /> {formatDate(post.published_at)}
+                          <p className="text-white/50 leading-relaxed italic font-light line-clamp-2 mb-4">
+                            {post.excerpt || 'Click to read this reflection...'}
+                          </p>
+                          <div className="flex flex-wrap gap-4 text-[10px] uppercase tracking-widest font-bold">
+                            <span className="text-[var(--accent)]">
+                              {formatDate(post.published_at)}
+                            </span>
+                            <span className="opacity-30">
+                              {getRelativeTime(post.published_at)}
+                            </span>
+                            <span className="text-[var(--accent)]/60">
+                              By {author?.username || 'Architect'}
+                            </span>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--accent)] font-bold">
-                            By {author?.username || 'Architect'}
-                          </div>
                         </div>
+                        <div className="text-xl opacity-0 group-hover:opacity-100 transition-opacity text-[var(--accent)]">→</div>
                       </div>
                     </div>
                   </Link>
