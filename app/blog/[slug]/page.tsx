@@ -10,7 +10,7 @@ import { User, Calendar, ArrowLeft } from "lucide-react";
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
-  const { data: post, error } = await supabase
+  const { data: postData, error } = await supabase
     .from('posts')
     .select(`
       id, title, slug, published_at, content, excerpt,
@@ -19,14 +19,14 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     .eq('slug', slug)
     .maybeSingle();
 
-  if (!post || error) return notFound();
+  if (!postData || error) return notFound();
 
-  // FIX: Supabase joins return an array in TS. Extract the first item safely.
-  const authorData = post.profiles as any;
+  // FIX: Handle Supabase returning join as array or single object
+  const authorData = (postData as any).profiles;
   const author = Array.isArray(authorData) ? authorData[0] : authorData;
 
   const renderContent = (text: string) => {
-    return text.split('\n').map((para, i) => (
+    return text.split('\n').map((para: string, i: number) => (
       <p key={i} className="mb-6">{para}</p>
     ));
   };
@@ -37,12 +37,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       
       <article className="max-w-3xl mx-auto pt-24">
         <Link href="/blog" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/20 hover:text-white mb-12 transition-all">
-          <ArrowLeft className="w-3 h-3" /> Back to Essays
+          <ArrowLeft className="w-3 h-3" /> Back to Collective
         </Link>
 
         <header className="mb-16">
           <h1 className="text-6xl font-light mb-8 tracking-tight leading-tight uppercase">
-            {post.title}
+            {postData.title}
           </h1>
           
           <div className="flex items-center gap-8 mb-12">
@@ -56,28 +56,28 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/20 font-bold">
               <Calendar className="w-3 h-3" /> 
-              {new Date(post.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date(postData.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
           </div>
 
-          {post.excerpt && (
+          {postData.excerpt && (
             <p className="text-2xl text-white/40 italic leading-relaxed border-l border-[var(--accent)]/30 pl-8 font-light">
-              {post.excerpt}
+              {postData.excerpt}
             </p>
           )}
         </header>
 
         <section className="prose prose-invert prose-lg max-w-none font-light leading-loose text-white/80 font-serif">
-          {renderContent(post.content)}
+          {renderContent(postData.content)}
         </section>
 
         <section className="mt-24 pt-12 border-t border-white/5">
           <PostInteractions 
-            postId={post.id} 
-            title={post.title} 
-            url={`/blog/${post.slug}`} 
+            postId={postData.id} 
+            title={postData.title} 
+            url={`/blog/${postData.slug}`} 
           />
-          <Comments postId={post.id} />
+          <Comments postId={postData.id} />
         </section>
       </article>
 

@@ -45,9 +45,7 @@ export default function BlogPage() {
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+      year: 'numeric', month: 'long', day: 'numeric' 
     });
   };
 
@@ -62,23 +60,18 @@ export default function BlogPage() {
           >
             Essays
           </motion.h1>
-          <p className="text-white/40 italic text-lg">A sanctuary for shared wisdom and silent reflections.</p>
+          <p className="text-white/40 italic text-lg leading-relaxed">A sanctuary for shared wisdom and silent reflections.</p>
         </header>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
-            <p className="font-mono text-[10px] uppercase tracking-widest opacity-20">Synchronizing...</p>
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-white/10 rounded-[40px]">
-            <p className="text-white/20 uppercase tracking-[0.4em] text-[10px]">The sanctuary is currently silent.</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest opacity-20">Synchronizing Sanctuary...</p>
           </div>
         ) : (
           <div className="space-y-12">
             {posts.map((post, idx) => {
               const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
-              
               return (
                 <motion.div
                   key={post.id}
@@ -90,16 +83,12 @@ export default function BlogPage() {
                     <div className="group p-10 rounded-[40px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[var(--accent)]/30 transition-all duration-500 shadow-xl">
                       <div className="flex flex-col gap-6">
                         <div className="flex justify-between items-start">
-                          <h2 className="text-3xl font-light leading-tight group-hover:text-[var(--accent)] transition-colors">
+                          <h2 className="text-3xl font-light leading-tight group-hover:text-[var(--accent)] transition-colors uppercase">
                             {post.title}
                           </h2>
                           <ArrowRight className="w-6 h-6 text-white/10 group-hover:text-[var(--accent)] group-hover:translate-x-2 transition-all" />
                         </div>
-                        
-                        <p className="text-white/50 leading-relaxed italic font-light line-clamp-3">
-                          {post.excerpt}
-                        </p>
-
+                        <p className="text-white/50 leading-relaxed italic font-light line-clamp-3">{post.excerpt}</p>
                         <div className="flex items-center gap-8 pt-4 border-t border-white/5 mt-4">
                           <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/30 font-bold">
                             <Calendar className="w-3 h-3" /> {formatDate(post.published_at)}
