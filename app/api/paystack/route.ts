@@ -4,8 +4,12 @@ export async function POST(req: Request) {
   try {
     const { userId, userEmail } = await req.json();
 
-    // Paystack KES amounts are in cents (1200.00 = 120000)
-    const kesAmount = 1200 * 100; 
+    if (!process.env.PAYSTACK_SECRET_KEY) {
+      return NextResponse.json({ error: 'Paystack Secret Key is missing in environment' }, { status: 500 });
+    }
+
+    // Amount: $9.00 -> ~1,200 KES (Paystack KES is in cents: 120000)
+    const amount = 1200 * 100; 
 
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
@@ -15,14 +19,10 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         email: userEmail,
-        amount: kesAmount,
+        amount: amount,
         currency: 'KES',
-        channels: ['card', 'mobile_money', 'bank_transfer'],
         callback_url: `${req.headers.get('origin')}/writer/dashboard?status=success`,
-        // CRITICAL: Ensure metadata matches what the webhook expects
-        metadata: {
-          userId: userId
-        }
+        metadata: { userId }
       })
     });
 

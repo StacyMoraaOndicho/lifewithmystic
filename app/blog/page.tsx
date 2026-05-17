@@ -12,7 +12,7 @@ type PostPreview = {
   slug: string;
   published_at: string;
   excerpt: string;
-  profiles?: any; // Safe handling for join types
+  profiles?: any;
 };
 
 export default function BlogPage() {
@@ -54,13 +54,13 @@ export default function BlogPage() {
   return (
     <main className="min-h-screen p-6 md:p-12 bg-[#0a0a0a] text-white">
       <div className="max-w-4xl mx-auto pt-24">
-        <header className="mb-20">
+        <header className="mb-20 px-4">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl font-light tracking-tight uppercase mb-4"
           >
-            The <span className="italic text-[var(--accent)] font-serif">Collective</span> Library
+            Essays
           </motion.h1>
           <p className="text-white/40 italic text-lg">A sanctuary for shared wisdom and silent reflections.</p>
         </header>
@@ -68,16 +68,15 @@ export default function BlogPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
-            <p className="font-mono text-[10px] uppercase tracking-widest opacity-20">Synchronizing with the collective...</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest opacity-20">Synchronizing...</p>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-[40px]">
-            <p className="text-white/20 uppercase tracking-[0.4em] text-[10px]">The library is currently silent.</p>
+            <p className="text-white/20 uppercase tracking-[0.4em] text-[10px]">The sanctuary is currently silent.</p>
           </div>
         ) : (
           <div className="space-y-12">
             {posts.map((post, idx) => {
-              // Extract profile safely from array or object
               const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
               
               return (
