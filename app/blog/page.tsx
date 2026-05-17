@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, ArrowRight, Calendar } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type PostPreview = {
   id: string;
@@ -43,12 +43,10 @@ export default function BlogPage() {
     }
   }
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+  const formatDate = (date?: string) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const getRelativeTime = (date?: string) => {
@@ -66,50 +64,55 @@ export default function BlogPage() {
   };
 
   return (
-    <main className="min-h-screen p-6 md:p-12 bg-[#0a0a0a] text-white">
-      <div className="max-w-4xl mx-auto pt-24">
-        <header className="mb-20 px-4">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-6xl font-light tracking-tight uppercase mb-4"
-          >
-            Essays
-          </motion.h1>
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="h-[2px] w-24 bg-gradient-to-r from-amber-400 to-rose-400 mb-8"
-          />
-          <p className="text-white/40 italic text-lg leading-relaxed max-w-xl">A sanctuary for shared wisdom and silent reflections.</p>
-        </header>
+    <main className="min-h-screen p-12 bg-[#0a0a0a] text-white">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-4xl mx-auto pt-16"
+      >
+        <h1 className="text-5xl mb-2 font-light tracking-wide uppercase">Essays & Writings</h1>
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="h-[2px] w-24 bg-gradient-to-r from-amber-400 to-rose-400 mb-8"
+        />
+        <p className="text-white/40 mb-12 italic">
+          {loading ? 'Synchronizing Sanctuary...' : posts.length === 0 ? 'No essays yet.' : `${posts.length} essay${posts.length !== 1 ? 's' : ''} published`}
+        </p>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
-            <p className="font-mono text-[10px] uppercase tracking-widest opacity-20">Synchronizing...</p>
+          <div className="flex justify-center py-20">
+             <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)] opacity-20" />
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="text-center py-12 text-white/20 uppercase tracking-widest text-xs font-mono">
+            <p>No reflections found in the library.</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {posts.map((post, idx) => {
+            {posts.map((post, index) => {
               const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
-              
+
               return (
                 <motion.div
                   key={post.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
                   <Link href={`/blog/${post.slug}`}>
-                    <div className="group p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[var(--accent)]/30 transition-all duration-500 shadow-xl">
+                    <motion.div
+                      whileHover={{ translateX: 8 }}
+                      className="group p-8 rounded-2xl border border-white/5 hover:border-[var(--accent)]/30 bg-white/[0.01] hover:bg-white/[0.03] transition-all duration-300 cursor-pointer"
+                    >
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div className="flex-1">
                           <h2 className="text-2xl font-light mb-3 group-hover:text-[var(--accent)] transition-colors uppercase tracking-tight">
                             {post.title}
                           </h2>
-                          <p className="text-white/50 leading-relaxed italic font-light line-clamp-2 mb-4">
+                          <p className="text-white/60 mb-4 line-clamp-2 italic font-light">
                             {post.excerpt || 'Click to read this reflection...'}
                           </p>
                           <div className="flex flex-wrap gap-4 text-[10px] uppercase tracking-widest font-bold">
@@ -126,14 +129,14 @@ export default function BlogPage() {
                         </div>
                         <div className="text-xl opacity-0 group-hover:opacity-100 transition-opacity text-[var(--accent)]">→</div>
                       </div>
-                    </div>
+                    </motion.div>
                   </Link>
                 </motion.div>
               );
             })}
           </div>
         )}
-      </div>
+      </motion.div>
     </main>
   );
 }
