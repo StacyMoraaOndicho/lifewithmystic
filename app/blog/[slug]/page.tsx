@@ -21,7 +21,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   if (!postData || error) return notFound();
 
-  // FIX: Handle Supabase returning join as array or single object
+  // FIX: Supabase joins return an array in TS. Extract the first item safely.
   const authorData = (postData as any).profiles;
   const author = Array.isArray(authorData) ? authorData[0] : authorData;
 
@@ -37,7 +37,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       
       <article className="max-w-3xl mx-auto pt-24">
         <Link href="/blog" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/20 hover:text-white mb-12 transition-all">
-          <ArrowLeft className="w-3 h-3" /> Back to Collective
+          <ArrowLeft className="w-3 h-3" /> Back to Essays
         </Link>
 
         <header className="mb-16">
